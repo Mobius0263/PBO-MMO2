@@ -1,0 +1,346 @@
+/* My Team header styles */
+.my-team-header {
+    margin-bottom: 24px;
+}
+
+.my-team-header h2 {
+    font-size: 24px;
+    color: #333;
+    margin-bottom: 8px;
+}
+
+.my-team-header p {
+    color: #666;
+    font-size: 14px;
+}
+
+/* Team filters */
+.team-filters {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 24px;
+}
+
+/* Add Member button */
+.btn-add-member {
+    background-color: #6c5ce7;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 8px 15px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.btn-add-member:hover {
+    background-color: #5a4ad6;
+}
+
+/* Team Members Grid */
+.team-members-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.text-avatar {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #6c5ce7;
+    color: white;
+    font-size: 32px;
+    font-weight: bold;
+}
+
+.member-avatar-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.member-avatar-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #6c5ce7;
+    color: white;
+    font-size: 30px;
+    font-weight: bold;
+}
+
+.member-bio {
+    margin-top: 8px;
+    font-size: 12px;
+    color: #666;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Member card */
+.member-card {
+    background-color: white;
+    border-radius: 10px;
+    padding: 20px;
+    position: relative;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    display: grid;
+    grid-template-areas:
+        "avatar info info"
+        "actions actions actions";
+    grid-template-columns: auto 1fr auto;
+    grid-template-rows: auto auto;
+    gap: 12px;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.member-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+/* Member status indicator */
+.member-status {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 2px solid white;
+}
+
+.status-tooltip {
+    position: absolute;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    top: -30px;
+    right: -5px;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s;
+}
+
+.member-status:hover .status-tooltip {
+    opacity: 1;
+    visibility: visible;
+}
+
+.status-online {
+    background-color: #4caf50;
+}
+
+.status-away {
+    background-color: #ff9800;
+}
+
+.status-offline {
+    background-color: #9e9e9e;
+}
+
+.status-meeting {
+    background-color: #2196f3;
+}
+
+.status-dnd {
+    background-color: #f44336;
+}
+
+/* Member avatar */
+.member-avatar {
+    grid-area: avatar;
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    overflow: hidden;
+}
+
+.member-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Member info */
+.member-info {
+    grid-area: info;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding-left: 10px;
+}
+
+.member-info h3 {
+    margin: 0 0 5px 0;
+    font-size: 18px;
+}
+
+.member-role {
+    display: flex;
+    align-items: center;
+    color: #666;
+    font-size: 14px;
+    margin-bottom: 5px;
+}
+
+.member-role i {
+    margin-right: 5px;
+    color: #6c5ce7;
+    font-size: 12px;
+}
+
+.member-email {
+    font-size: 14px;
+    color: #888;
+}
+
+/* Member mood */
+.member-mood {
+    grid-area: mood;
+    display: flex;
+    justify-content: flex-end;
+    align-items: flex-start;
+}
+
+.mood-indicator {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mood-emoji {
+    font-size: 18px;
+}
+
+/* Member activity */
+.member-activity {
+    grid-area: activity;
+    font-size: 13px;
+    color: #888;
+}
+
+/* Member actions */
+.member-actions {
+    grid-area: actions;
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #f0f0f0;
+}
+
+.action-button {
+    background: none;
+    border: none;
+    color: #666;
+    cursor: pointer;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.action-button:hover {
+    background-color: #f0f0f0;
+    color: #6c5ce7;
+}
+
+/* Team Stats */
+.team-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin-top: 30px;
+}
+
+.stats-card {
+    background-color: white;
+    border-radius: 10px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.stats-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 10px;
+    background-color: #f0f0ff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 16px;
+    color: #6c5ce7;
+    font-size: 24px;
+}
+
+.stats-info h3 {
+    margin: 0 0 5px 0;
+    font-size: 14px;
+    color: #666;
+}
+
+.stats-value {
+    font-size: 24px;
+    font-weight: 600;
+    color: #333;
+}
+
+/* Loading and error states */
+.team-loading,
+.team-error,
+.no-results {
+    text-align: center;
+    padding: 40px;
+    color: #666;
+}
+
+.team-error {
+    color: #f44336;
+}
+
+.team-error i,
+.no-results i {
+    font-size: 32px;
+    margin-bottom: 10px;
+}
+
+/* Responsive */
+@media (max-width: 992px) {
+    .team-members-grid {
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    .team-filters {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .team-members-grid {
+        grid-template-columns: 1fr;
+    }
+}

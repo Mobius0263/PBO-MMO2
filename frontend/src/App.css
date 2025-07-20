@@ -1,0 +1,284 @@
+/* Dashboard Layout */
+.dashboard-main {
+  display: flex;
+  min-height: 100vh;
+  background-color: #f8f9fa;
+}
+
+/* Main Content */
+.dashboard-content {
+  flex: 1;
+  margin-left: 220px;
+  padding: 20px;
+}
+
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.search-container {
+  flex: 1;
+  max-width: 400px;
+}
+
+.search-input {
+  width: 100%;
+  padding: 10px 15px;
+  border: 1px solid #e0e0e0;
+  border-radius: 20px;
+  background-color: #f8f8f8;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.btn-new-meeting {
+  background-color: #6c5ce7;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 8px 15px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.btn-new-meeting:hover {
+  background-color: #5a4ad6;
+}
+
+.notification-icon {
+  position: relative;
+  cursor: pointer;
+}
+
+.notification-badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background-color: #ff7675;
+  color: white;
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+  font-size: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Welcome Section */
+.welcome-section {
+  background-color: white;
+  border-radius: 10px;
+  padding: 20px;
+  display: flex;
+  margin-bottom: 20px;
+  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.05);
+}
+
+.welcome-text {
+  flex: 1;
+}
+
+.welcome-text h2 {
+  margin-top: 0;
+  color: #333;
+  font-size: 1.7rem;
+}
+
+.emotion-check-in {
+  flex: 1;
+  padding-left: 20px;
+}
+
+.emotion-check-in h3 {
+  margin-top: 0;
+  color: #333;
+}
+
+.mood-selection {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.mood-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: #f9f9f9;
+  padding: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  width: 80px;
+  transition: all 0.2s ease;
+}
+
+.mood-option.selected {
+  background-color: #e8f4fc;
+  border: 1px solid #6c5ce7;
+}
+
+.mood-emoji {
+  font-size: 24px;
+  margin-bottom: 5px;
+}
+
+.mood-note {
+  width: 100%;
+  height: 80px;
+  padding: 10px;
+  border: 1px solid #e0e0e0;
+  border-radius: 5px;
+  margin-bottom: 15px;
+  resize: none;
+}
+
+.submit-button {
+  background-color: #6c5ce7;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 8px 15px;
+  cursor: pointer;
+}
+
+/* Dashboard Grid */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 20px;
+}
+
+.dashboard-card {
+  background-color: white;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.05);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.card-header h3 {
+  margin: 0;
+  color: #333;
+}
+
+.sub-title {
+  color: #888;
+  font-size: 14px;
+}
+
+.view-all {
+  color: #6c5ce7;
+  font-size: 14px;
+  text-decoration: none;
+}
+
+.emotion-chart {
+  width: 100%;
+}
+
+.emotion-chart img {
+  width: 100%;
+  height: auto;
+  border-radius: 5px;
+}
+
+/* Meetings List */
+.meetings-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.meeting-item {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  border-radius: 5px;
+  background-color: #f9f9f9;
+}
+
+.meeting-time {
+  width: 80px;
+  text-align: center;
+  background-color: #6c5ce7;
+  color: white;
+  padding: 8px;
+  border-radius: 5px;
+}
+
+.time {
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.day {
+  font-size: 12px;
+}
+
+.meeting-details {
+  flex: 1;
+  padding: 0 15px;
+}
+
+.meeting-details h4 {
+  margin: 0 0 5px 0;
+  font-size: 16px;
+}
+
+.meeting-details p {
+  margin: 0;
+  color: #888;
+  font-size: 12px;
+}
+
+.btn-join, .btn-schedule {
+  background-color: #6c5ce7;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 5px 15px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.btn-schedule {
+  background-color: #74b9ff;
+}
+
+/* Responsive */
+@media (max-width: 992px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .welcome-section {
+    flex-direction: column;
+  }
+  
+  .emotion-check-in {
+    padding-left: 0;
+    margin-top: 20px;
+  }
+}
+
+@media (max-width: 768px) {  
+  .dashboard-content {
+    margin-left: 70px;
+  }
+}

@@ -1,0 +1,57 @@
+:root {
+  --primary-color: #6c5ce7;
+  --secondary-color: #74b9ff;
+  --text-color: #333333;
+  --light-text: #666666;
+  --background-color: #f8f9fa;
+  --card-bg: #ffffff;
+  --border-color: #e0e0e0;
+  --hover-color: #5a4ad6;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Poppins', system-ui, sans-serif;
+  margin: 0;
+  padding: 0;
+  color: var(--text-color);
+  background-color: var(--background-color);
+}
+
+/* Icon classes for sidebar */
+.icon-dashboard:before { content: '\f0e4'; font-family: 'Font Awesome 5 Free'; font-weight: 900; }
+.icon-team:before { content: '\f0c0'; font-family: 'Font Awesome 5 Free'; font-weight: 900; }
+.icon-meetings:before { content: '\f0fc'; font-family: 'Font Awesome 5 Free'; font-weight: 900; }
+.icon-insights:before { content: '\f080'; font-family: 'Font Awesome 5 Free'; font-weight: 900; }
+.icon-settings:before { content: '\f013'; font-family: 'Font Awesome 5 Free'; font-weight: 900; }
+.icon-plus:before { content: '\f067'; font-family: 'Font Awesome 5 Free'; font-weight: 900; }
+.icon-bell:before { content: '\f0f3'; font-family: 'Font Awesome 5 Free'; font-weight: 900; }
+
+/* Navigation links styling */
+.nav-link {
+  color: inherit;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.sidebar-nav li {
+  padding: 0;
+}
+
+.sidebar-nav li .nav-link {
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+}
+
+.sidebar-nav li .nav-link i {
+  margin-right: 10px;
+  font-size: 18px;
+}
