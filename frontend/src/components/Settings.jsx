@@ -72,15 +72,18 @@ function Settings() {
 
     // filepath: d:\KULIAH\SEMESTER 4\Rekayasa Perangkat Lunak\code\new 16-6-2025\frontend\src\components\Settings.jsx
 
+    // Inside the handleProfileUpdate function
+
     const handleProfileUpdate = async (e) => {
         e.preventDefault();
         setLoading(true);
+        setMessage({ text: '', type: '' });
 
         try {
             console.log("Starting profile update with data:", {
                 fullName,
                 email,
-                role,
+                role, // Make sure role is included
                 bio,
                 imageFile: imageFile ? imageFile.name : 'No file'
             });
@@ -98,38 +101,9 @@ function Settings() {
                     console.log("Image upload result:", uploadResult);
 
                     // Ensure imageUrl is complete with domain
-                    let imageUrl = uploadResult.imageUrl;
+                    imageUrl = uploadResult.imageUrl;
                     if (imageUrl && imageUrl.startsWith('/uploads')) {
                         imageUrl = 'http://localhost:8080' + imageUrl;
-                    }
-
-                    // Update user data
-                    const updatedData = {
-                        nama: fullName,
-                        email,
-                        role,
-                        bio,
-                        profileImage: imageUrl
-                    };
-
-                    console.log("Updating user with data:", updatedData);
-
-                    try {
-                        const result = await updateUser(user.id, updatedData);
-                        console.log("Update result:", result);
-
-                        // Update context
-                        loginUser({ ...user, ...updatedData });
-
-                        setMessage({ text: 'Profile updated successfully', type: 'success' });
-
-                        // Redirect after success
-                        setTimeout(() => {
-                            navigate('/dashboard');
-                        }, 2000);
-                    } catch (updateError) {
-                        console.error("Update failed:", updateError);
-                        throw new Error("Failed to update profile: " + (updateError.response?.data?.error || updateError.message));
                     }
                 } catch (uploadError) {
                     console.error("Image upload failed:", uploadError);
@@ -137,13 +111,44 @@ function Settings() {
                 }
             }
 
-            // Rest of the function...
+            // Update user data - Make sure role is included even if unchanged
+            const updatedData = {
+                nama: fullName,
+                email,
+                role: role, // Include role explicitly
+                bio,
+                profileImage: imageUrl
+            };
+
+            console.log("Updating user with data:", updatedData);
+
+            try {
+                const result = await updateUser(user.id, updatedData);
+                console.log("Update result:", result);
+
+                // Update context with the new data
+                // This is important to refresh the UI with the new role
+                const updatedUserData = {
+                    ...user,
+                    ...updatedData
+                };
+                loginUser(updatedUserData);
+
+                setMessage({ text: 'Profile updated successfully', type: 'success' });
+
+                // Clear any file selection
+                setImageFile(null);
+
+            } catch (updateError) {
+                console.error("Update failed:", updateError);
+                throw new Error("Failed to update profile: " + (updateError.response?.data?.error || updateError.message));
+            }
         } catch (error) {
-            // Error handling...
+            console.error('Error updating profile:', error);
+            setMessage({ text: error.message || 'Failed to update profile', type: 'error' });
+        } finally {
+            setLoading(false);
         }
-        setTimeout(() => {
-            navigate('/dashboard'); // Use navigate for redirect
-        }, 2000);
     };
 
     const handlePasswordUpdate = async (e) => {

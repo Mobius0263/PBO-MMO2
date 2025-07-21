@@ -53,6 +53,7 @@ func GetTeamMembers(c *fiber.Ctx) error {
 	return c.Status(200).JSON(users)
 }
 
+// Make sure this function is correctly implemented
 func GetUsers(c *fiber.Ctx) error {
     ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
     defer cancel()
@@ -75,11 +76,17 @@ func GetUsers(c *fiber.Ctx) error {
     // Convert to safe response without passwords
     var safeUsers []fiber.Map
     for _, user := range users {
+        // Ensure role is not empty
+        role := user.Role
+        if role == "" {
+            role = "Team Member" // Default role if none is set
+        }
+        
         safeUsers = append(safeUsers, fiber.Map{
             "id":           user.ID,
             "nama":         user.Nama,
             "email":        user.Email,
-            "role":         user.Role,
+            "role":         role,
             "bio":          user.Bio,
             "profileImage": user.ProfileImage,
         })

@@ -13,8 +13,8 @@ export const AuthProvider = ({ children }) => {
     // Helper to ensure full photo URL
     const ensureFullImageUrl = (userData) => {
         if (!userData) return userData;
-        
-        const newUserData = {...userData};
+
+        const newUserData = { ...userData };
         // Fix: check if imageUrl starts with /uploads
         if (newUserData.profileImage && newUserData.profileImage.startsWith('/uploads')) {
             newUserData.profileImage = API_URL + newUserData.profileImage;
@@ -59,10 +59,22 @@ export const AuthProvider = ({ children }) => {
     };
 
     // Update user with new properties
+    // Make sure the updateUser function in the context properly updates the role
+
+    // Update user with new properties
     const updateUser = (newUserData) => {
-        const updatedUser = {...user, ...newUserData};
+        const updatedUser = {
+            ...user,
+            ...newUserData,
+            // Make sure role is properly updated
+            role: newUserData.role || user.role || 'Team Member'
+        };
+
+        // Process image URL if needed
         const processedUser = ensureFullImageUrl(updatedUser);
-        console.log("User updated with new image URL:", processedUser);
+        console.log("User updated with new data:", processedUser);
+
+        // Update state and localStorage
         setUser(processedUser);
         localStorage.setItem('user', JSON.stringify(processedUser));
         return processedUser;

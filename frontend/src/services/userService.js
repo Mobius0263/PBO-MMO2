@@ -21,12 +21,13 @@ api.interceptors.request.use((config) => {
 
 // Get all users
 // Get all users
+// This function should be already implemented, but ensure it's working correctly
 export const getUsers = async () => {
     try {
         console.log('Fetching users from:', API_URL + '/users');
         const response = await api.get('/users');
         console.log('API response:', response);
-        
+
         // Add baseURL to profileImage if exists
         const users = response.data.map(user => {
             if (user.profileImage && !user.profileImage.startsWith('http')) {
@@ -34,7 +35,7 @@ export const getUsers = async () => {
             }
             return user;
         });
-        
+
         return users;
     } catch (error) {
         console.error('Error fetching users:', error);
@@ -42,19 +43,9 @@ export const getUsers = async () => {
             console.error('Response status:', error.response.status);
             console.error('Response data:', error.response.data);
         }
-        
-        // Fallback data if API fails
-        console.log('Providing fallback user data');
-        return [
-            {
-                id: '1',
-                nama: 'John Doe',
-                email: 'john@example.com',
-                role: 'Team Leader',
-                profileImage: null
-            },
-            // other fallback users...
-        ];
+
+        // Return an empty array to avoid errors
+        return [];
     }
 };
 
@@ -62,13 +53,13 @@ export const getUsers = async () => {
 export const getUserById = async (userId) => {
     try {
         const response = await api.get(`/users/${userId}`);
-        
+
         // Add baseURL to profileImage if exists
         const user = response.data;
         if (user.profileImage && !user.profileImage.startsWith('http')) {
             user.profileImage = API_URL + user.profileImage;
         }
-        
+
         return user;
     } catch (error) {
         console.error(`Error fetching user with ID ${userId}:`, error);
@@ -77,15 +68,27 @@ export const getUserById = async (userId) => {
 };
 
 // Update user
+// Update the updateUser function to ensure all fields are sent properly
+
 export const updateUser = async (userId, userData) => {
     try {
+        console.log('Updating user with data:', userData);
+
+        // Make sure we're sending all required fields, including role
+        const dataToSend = {
+            ...userData,
+            role: userData.role || 'Team Member' // Ensure role is always set
+        };
+
         // Try with format /api/users/:id
         try {
-            const response = await api.put(`/api/users/${userId}`, userData);
+            const response = await api.put(`/api/users/${userId}`, dataToSend);
+            console.log('Update response:', response.data);
             return response.data;
         } catch (error) {
             // If failed, try with format /users/:id
-            const response = await api.put(`/users/${userId}`, userData);
+            const response = await api.put(`/users/${userId}`, dataToSend);
+            console.log('Update response (fallback):', response.data);
             return response.data;
         }
     } catch (error) {
@@ -101,7 +104,7 @@ export const uploadProfileImage = async (formData) => {
         if (!token) {
             throw new Error('No authentication token found');
         }
-        
+
         const uploadInstance = axios.create({
             baseURL: API_URL,
             headers: {
@@ -109,18 +112,18 @@ export const uploadProfileImage = async (formData) => {
                 'Authorization': `Bearer ${token}`
             }
         });
-        
+
         console.log('Uploading to:', API_URL + '/api/upload-profile-image');
         const response = await uploadInstance.post('/api/upload-profile-image', formData);
-        
+
         console.log('Upload response:', response.data);
-        
+
         // Ensure imageUrl is full URL
         if (response.data.imageUrl && response.data.imageUrl.startsWith('/uploads')) {
             response.data.imageUrl = API_URL + response.data.imageUrl;
             console.log('Image URL with domain:', response.data.imageUrl);
         }
-        
+
         return response.data;
     } catch (error) {
         console.error('Error uploading profile image:', error);
