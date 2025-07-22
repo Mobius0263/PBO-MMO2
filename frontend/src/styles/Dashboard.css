@@ -99,12 +99,14 @@
   background-color: #f9f9f9;
   border-radius: 10px;
   padding: 15px;
+  margin-bottom: 15px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
   transition: transform 0.2s;
 }
 
 .meeting-item:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+  transform: translateY(-3px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .meeting-time {
@@ -161,11 +163,13 @@
 
 /* Style for emotion chart */
 .team-emotion {
-  grid-column: 1; /* Place on the left */
+  grid-column: 1;
+  /* Place on the left */
 }
 
 .upcoming-meetings {
-  grid-column: 2; /* Place on the right */
+  grid-column: 2;
+  /* Place on the right */
 }
 
 .card-header {
@@ -302,7 +306,8 @@
 
 .dashboard-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr; /* Two equal columns */
+  grid-template-columns: 1fr 1fr;
+  /* Two equal columns */
   gap: 30px;
 }
 
@@ -356,6 +361,7 @@
   0% {
     transform: rotate(0deg);
   }
+
   100% {
     transform: rotate(360deg);
   }
@@ -370,44 +376,6 @@
   font-style: italic;
 }
 
-@media (max-width: 992px) {
-  .dashboard-grid {
-    grid-template-columns: 1fr; /* Stack on smaller screens */
-  }
-  
-  .team-emotion,
-  .upcoming-meetings {
-    grid-column: 1; /* Both take full width */
-  }
-  
-  .welcome-section {
-    flex-direction: column;
-  }
-  
-  .emotion-check-in {
-    padding-left: 0;
-    margin-top: 20px;
-    padding-top: 20px;
-    border-top: 1px solid #f0f0f0;
-  }
-}
-
-@media (max-width: 768px) {
-  .dashboard-content {
-    margin-left: 70px;
-    padding: 15px;
-  }
-  
-  .mood-selection {
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-  
-  .mood-option {
-    width: 70px;
-    padding: 10px 5px;
-  }
-}
 /* Additional styles for the existing CSS */
 
 /* Style for emotional check-in */
@@ -448,4 +416,31 @@
 .no-activity p {
   margin: 0;
   font-size: 0.9rem;
+}
+
+.stat-number {
+  font-size: 24px;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 5px;
+}
+
+.stat-label {
+  font-size: 14px;
+  color: #666;
+}
+
+.team-stats {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+}
+
+.stat-item {
+  text-align: center;
+  padding: 10px 15px;
+  background-color: #f5f5f5;
+  border-radius: 8px;
+  flex: 1;
+  margin: 0 5px;
 }

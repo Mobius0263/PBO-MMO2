@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { getUsers } from '../services/userService';
+import { createMeeting, getMeetings } from '../services/meetingService';
 import Sidebar from './Sidebar';
 import '../styles/Meetings.css';
 
@@ -26,12 +27,26 @@ function Meetings() {
         allMembers: false
     });
 
-    // Load meetings from localStorage on component mount
+    // Load meetings from API instead of localStorage
     useEffect(() => {
-        const savedMeetings = localStorage.getItem('meetings');
-        if (savedMeetings) {
-            setMeetings(JSON.parse(savedMeetings));
-        }
+        const fetchMeetings = async () => {
+            try {
+                console.log('Fetching all meetings...');
+                const response = await getMeetings();
+                if (Array.isArray(response)) {
+                    console.log(`Successfully fetched ${response.length} meetings`);
+                    setMeetings(response);
+                } else {
+                    console.warn('Unexpected response format:', response);
+                    setMeetings([]);
+                }
+            } catch (error) {
+                console.error('Error fetching meetings:', error);
+                setMeetings([]); // Set empty array to avoid undefined errors
+            }
+        };
+
+        fetchMeetings();
     }, []);
 
     // Load team members
@@ -58,12 +73,12 @@ function Meetings() {
                     const endTime = new Date(meetingDate.getTime() + meeting.duration * 60000);
                     return endTime > now;
                 });
-                
+
                 // Update localStorage if meetings were removed
                 if (activeMeetings.length !== prevMeetings.length) {
                     localStorage.setItem('meetings', JSON.stringify(activeMeetings));
                 }
-                
+
                 return activeMeetings;
             });
         }, 60000); // Update every minute
@@ -99,37 +114,50 @@ function Meetings() {
     };
 
     // Handle new meeting form submission
-    const handleCreateMeeting = (e) => {
+    const handleCreateMeeting = async (e) => {
         e.preventDefault();
-        
+
         if (!newMeetingData.title || !newMeetingData.date || !newMeetingData.time) {
             alert('Please fill in all required fields');
             return;
         }
 
-        const newMeeting = {
-            id: Date.now().toString(),
-            ...newMeetingData,
-            participants: newMeetingData.allMembers ? teamMembers : newMeetingData.participants,
-            createdBy: user.id,
-            createdAt: new Date().toISOString()
-        };
+        try {
+            // Create meeting using API
+            const participantIds = newMeetingData.allMembers
+                ? []
+                : newMeetingData.participants.map(p => p.id);
 
-        const updatedMeetings = [...meetings, newMeeting];
-        setMeetings(updatedMeetings);
-        localStorage.setItem('meetings', JSON.stringify(updatedMeetings));
+            const meetingToCreate = {
+                title: newMeetingData.title,
+                description: newMeetingData.description,
+                date: newMeetingData.date,
+                time: newMeetingData.time,
+                duration: parseInt(newMeetingData.duration),
+                allMembers: newMeetingData.allMembers,
+                participants: participantIds
+            };
 
-        // Reset form and close modal
-        setNewMeetingData({
-            title: '',
-            description: '',
-            date: '',
-            time: '',
-            duration: 60,
-            participants: [],
-            allMembers: false
-        });
-        setShowNewMeetingModal(false);
+            const newMeeting = await createMeeting(meetingToCreate);
+
+            // Update local state with the newly created meeting
+            setMeetings(prevMeetings => [...prevMeetings, newMeeting]);
+
+            // Reset form and close modal
+            setNewMeetingData({
+                title: '',
+                description: '',
+                date: '',
+                time: '',
+                duration: 60,
+                participants: [],
+                allMembers: false
+            });
+            setShowNewMeetingModal(false);
+        } catch (error) {
+            console.error('Error creating meeting:', error);
+            alert('Failed to create meeting. Please try again.');
+        }
     };
 
     // Handle participant selection
@@ -162,14 +190,14 @@ function Meetings() {
     // Filter meetings based on view and current time
     const getFilteredMeetings = () => {
         const now = new Date();
-        
+
         return meetings.filter(meeting => {
             const meetingDate = new Date(`${meeting.date}T${meeting.time}`);
             const endTime = new Date(meetingDate.getTime() + meeting.duration * 60000);
-            
+
             // Remove meetings that have completely passed
             if (endTime <= now) return false;
-            
+
             switch (view) {
                 case 'upcoming':
                     return meetingDate >= now;
@@ -197,7 +225,7 @@ function Meetings() {
         const tomorrow = new Date();
         tomorrow.setDate(tomorrow.getDate() + 1);
         const tomorrowStr = tomorrow.toDateString();
-        
+
         return getFilteredMeetings().filter(meeting => {
             const meetingDate = new Date(`${meeting.date}T${meeting.time}`);
             return meetingDate.toDateString() === tomorrowStr;
@@ -209,7 +237,7 @@ function Meetings() {
         const year = month.getFullYear();
         const monthIndex = month.getMonth();
 
-        const days = []; 
+        const days = [];
 
         // Get first day of the month and last day of the month
         const firstDay = new Date(year, monthIndex, 1);
@@ -286,7 +314,7 @@ function Meetings() {
                             <input type="text" placeholder="Search meetings..." />
                             <i className="fas fa-search"></i>
                         </div>
-                        <button 
+                        <button
                             className="btn-new-meeting"
                             onClick={() => setShowNewMeetingModal(true)}
                         >
@@ -397,7 +425,7 @@ function Meetings() {
                         ) : (
                             <div className="no-meetings">
                                 <p>No meetings scheduled for today</p>
-                                <button 
+                                <button
                                     className="btn-new-meeting"
                                     onClick={() => setShowNewMeetingModal(true)}
                                 >
@@ -458,7 +486,7 @@ function Meetings() {
                         ) : (
                             <div className="no-meetings">
                                 <p>No meetings scheduled for tomorrow</p>
-                                <button 
+                                <button
                                     className="btn-new-meeting"
                                     onClick={() => setShowNewMeetingModal(true)}
                                 >
@@ -475,7 +503,7 @@ function Meetings() {
                         <div className="modal-content" onClick={(e) => e.stopPropagation()}>
                             <div className="modal-header">
                                 <h3>Create New Meeting</h3>
-                                <button 
+                                <button
                                     className="btn-close"
                                     onClick={() => setShowNewMeetingModal(false)}
                                 >
@@ -582,10 +610,9 @@ function Meetings() {
                                                 {teamMembers.map(member => (
                                                     <div
                                                         key={member.id}
-                                                        className={`member-item ${
-                                                            newMeetingData.participants.some(p => p.id === member.id) 
-                                                                ? 'selected' : ''
-                                                        }`}
+                                                        className={`member-item ${newMeetingData.participants.some(p => p.id === member.id)
+                                                            ? 'selected' : ''
+                                                            }`}
                                                         onClick={() => toggleParticipant(member)}
                                                     >
                                                         <div className="member-avatar">
@@ -602,10 +629,9 @@ function Meetings() {
                                                             <div className="member-role">{member.role || 'Team Member'}</div>
                                                         </div>
                                                         <div className="member-checkbox">
-                                                            <i className={`fas ${
-                                                                newMeetingData.participants.some(p => p.id === member.id) 
-                                                                    ? 'fa-check-circle' : 'fa-circle'
-                                                            }`}></i>
+                                                            <i className={`fas ${newMeetingData.participants.some(p => p.id === member.id)
+                                                                ? 'fa-check-circle' : 'fa-circle'
+                                                                }`}></i>
                                                         </div>
                                                     </div>
                                                 ))}
@@ -615,15 +641,15 @@ function Meetings() {
                                 </div>
 
                                 <div className="form-actions">
-                                    <button 
-                                        type="button" 
+                                    <button
+                                        type="button"
                                         className="btn-cancel"
                                         onClick={() => setShowNewMeetingModal(false)}
                                     >
                                         Cancel
                                     </button>
-                                    <button 
-                                        type="submit" 
+                                    <button
+                                        type="submit"
                                         className="btn-create"
                                     >
                                         Create Meeting

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import Sidebar from './Sidebar';
 import { getUsers } from '../services/userService';
+import { getTodayMeetings } from '../services/meetingService';
 import '../styles/Dashboard.css';
 
 function Dashboard() {
@@ -10,7 +11,9 @@ function Dashboard() {
     const [teamMembers, setTeamMembers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    
+    const [todaysMeetings, setTodaysMeetings] = useState([]);
+    const [meetingsLoading, setMeetingsLoading] = useState(true);
+
     // Fetch team members data
     useEffect(() => {
         const fetchTeamMembers = async () => {
@@ -29,13 +32,27 @@ function Dashboard() {
 
         fetchTeamMembers();
     }, []);
-    
+
+    // Fetch today's meetings
+    useEffect(() => {
+        const fetchMeetings = async () => {
+            try {
+                setMeetingsLoading(true);
+                const meetings = await getTodayMeetings();
+                setTodaysMeetings(meetings);
+            } catch (err) {
+                console.error('Error fetching meetings:', err);
+            } finally {
+                setMeetingsLoading(false);
+            }
+        };
+
+        fetchMeetings();
+    }, []);
+
     // Count online users (currently just a placeholder)
     const onlineUsers = 0; // In a real app, you would track this with user status
-    
-    // Get meetings for today (placeholder)
-    const todaysMeetings = 0; // You would fetch this from your meetings data
-    
+
     if (!user) {
         return (
             <div className="loading-container">
@@ -88,7 +105,7 @@ function Dashboard() {
                                     <div className="stat-label">Online</div>
                                 </div>
                                 <div className="stat-item">
-                                    <div className="stat-number">{todaysMeetings}</div>
+                                    <div className="stat-number">{meetingsLoading ? '...' : todaysMeetings.length}</div>
                                     <div className="stat-label">Meetings Today</div>
                                 </div>
                             </div>
@@ -100,10 +117,27 @@ function Dashboard() {
                                 <Link to="/meetings" className="view-all">View All</Link>
                             </div>
                             <div className="meetings-list">
-                                <div className="no-meetings">
-                                    <p>No upcoming meetings</p>
-                                    <Link to="/meetings" className="btn-schedule">Schedule Meeting</Link>
-                                </div>
+                                {meetingsLoading ? (
+                                    <div className="loading-spinner"></div>
+                                ) : todaysMeetings.length > 0 ? (
+                                    todaysMeetings.map(meeting => (
+                                        <div key={meeting.id} className="meeting-item">
+                                            <div className="meeting-time">
+                                                <div className="time">{meeting.time}</div>
+                                            </div>
+                                            <div className="meeting-details">
+                                                <h4>{meeting.title}</h4>
+                                                <p>{meeting.description || 'No description'}</p>
+                                            </div>
+                                            <Link to={`/meetings`} className="btn-join">Join</Link>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <div className="no-meetings">
+                                        <p>No upcoming meetings</p>
+                                        <Link to="/meetings" className="btn-schedule">Schedule Meeting</Link>
+                                    </div>
+                                )}
                             </div>
                         </div>
 

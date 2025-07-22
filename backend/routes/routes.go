@@ -40,6 +40,11 @@ func SetupRoutes(app *fiber.App) {
 	// Upload profile image
 	api.Post("/upload-profile-image", controllers.UploadProfileImage)
 
+	// Meeting routes - using the existing protected API group
+	api.Post("/meetings", controllers.CreateMeeting)
+	api.Get("/meetings", controllers.GetMeetings)
+	api.Get("/meetings/today", controllers.GetTodayMeetings)
+
 	// Health check
 	app.Get("/health", func(c *fiber.Ctx) error {
 		return c.Status(200).JSON(fiber.Map{
