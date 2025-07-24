@@ -12,6 +12,18 @@ import (
 	"backend/utils"
 )
 
+// Register godoc
+// @Summary Register a new user
+// @Description Register a new user with email and password
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param user body models.User true "User registration data"
+// @Success 201 {object} map[string]interface{} "Registration successful"
+// @Failure 400 {object} map[string]string "Invalid request"
+// @Failure 409 {object} map[string]string "Email already registered"
+// @Failure 500 {object} map[string]string "Internal server error"
+// @Router /register [post]
 func Register(c *fiber.Ctx) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -49,6 +61,18 @@ func Register(c *fiber.Ctx) error {
 	})
 }
 
+// Login godoc
+// @Summary User login
+// @Description Authenticate user with email and password
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param credentials body object{email=string,password=string} true "Login credentials"
+// @Success 200 {object} map[string]interface{} "Login successful"
+// @Failure 400 {object} map[string]string "Invalid request"
+// @Failure 401 {object} map[string]string "Authentication failed"
+// @Failure 500 {object} map[string]string "Internal server error"
+// @Router /login [post]
 func Login(c *fiber.Ctx) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -80,14 +104,14 @@ func Login(c *fiber.Ctx) error {
 	}
 
 	return c.JSON(fiber.Map{
-        "message": "Login berhasil",
-        "token":   tokenString,
-        "user": fiber.Map{
-            "id":    user.ID, // Pastikan field ini ada
-            "nama":  user.Nama,
-            "email": user.Email,
-            "role":  user.Role,
-            "profileImage": user.ProfileImage,
-        },
-    })
+		"message": "Login berhasil",
+		"token":   tokenString,
+		"user": fiber.Map{
+			"id":           user.ID, // Pastikan field ini ada
+			"nama":         user.Nama,
+			"email":        user.Email,
+			"role":         user.Role,
+			"profileImage": user.ProfileImage,
+		},
+	})
 }

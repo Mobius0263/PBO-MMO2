@@ -8,6 +8,7 @@ import MyTeam from './components/MyTeam';
 import Settings from './components/Settings';
 import Meetings from './components/Meetings';
 import ProtectedRoute from './components/ProtectedRoute';
+import ErrorBoundary from './components/ErrorBoundary';
 import './App.css';
 
 
@@ -107,47 +108,51 @@ function SimpleLoginForm() {
 // Main App component
 function App() {
   return (
-    <Router>
-      <AuthProvider>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route 
-            path="/dashboard" 
-            element={
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/my-team" 
-            element={
-              <ProtectedRoute>
-                <MyTeam />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-          path="/meetings" 
-          element={
-          <Meetings />
-          } 
-          />
+    <ErrorBoundary>
+      <Router>
+        <AuthProvider>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route 
+              path="/dashboard" 
+              element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/my-team" 
+              element={
+                <ProtectedRoute>
+                  <MyTeam />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/meetings" 
+              element={
+                <ProtectedRoute>
+                  <Meetings />
+                </ProtectedRoute>
+              } 
+            />
 
-          <Route 
-            path="/settings" 
-            element={
-              <ProtectedRoute>
-                <Settings />
-              </ProtectedRoute>
-            } 
-          />
-          
-          <Route path="/" element={<Navigate to="/login" replace />} />
-        </Routes>
-      </AuthProvider>
-    </Router>
+            <Route 
+              path="/settings" 
+              element={
+                <ProtectedRoute>
+                  <Settings />
+                </ProtectedRoute>
+              } 
+            />
+            
+            <Route path="/" element={<Navigate to="/login" replace />} />
+          </Routes>
+        </AuthProvider>
+      </Router>
+    </ErrorBoundary>
   );
 }
 export default App;

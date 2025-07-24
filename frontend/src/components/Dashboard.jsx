@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import Sidebar from './Sidebar';
 import { getUsers } from '../services/userService';
-import { getTodayMeetings } from '../services/meetingService';
+import { getUpcomingMeetings } from '../services/meetingService';
 import '../styles/Dashboard.css';
 
 function Dashboard() {
@@ -11,7 +11,7 @@ function Dashboard() {
     const [teamMembers, setTeamMembers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [todaysMeetings, setTodaysMeetings] = useState([]);
+    const [upcomingMeetings, setUpcomingMeetings] = useState([]);
     const [meetingsLoading, setMeetingsLoading] = useState(true);
 
     // Fetch team members data
@@ -20,11 +20,13 @@ function Dashboard() {
             try {
                 setLoading(true);
                 const response = await getUsers();
-                setTeamMembers(response);
+                // Ensure response is an array
+                setTeamMembers(Array.isArray(response) ? response : []);
                 setError(null);
             } catch (err) {
                 console.error('Error fetching team members:', err);
                 setError('Failed to load team members data');
+                setTeamMembers([]); // Set empty array on error
             } finally {
                 setLoading(false);
             }
@@ -33,15 +35,17 @@ function Dashboard() {
         fetchTeamMembers();
     }, []);
 
-    // Fetch today's meetings
+    // Fetch upcoming meetings
     useEffect(() => {
         const fetchMeetings = async () => {
             try {
                 setMeetingsLoading(true);
-                const meetings = await getTodayMeetings();
-                setTodaysMeetings(meetings);
+                const meetings = await getUpcomingMeetings();
+                // Ensure meetings is an array
+                setUpcomingMeetings(Array.isArray(meetings) ? meetings : []);
             } catch (err) {
-                console.error('Error fetching meetings:', err);
+                console.error('Error fetching upcoming meetings:', err);
+                setUpcomingMeetings([]); // Set empty array on error
             } finally {
                 setMeetingsLoading(false);
             }
@@ -52,12 +56,26 @@ function Dashboard() {
 
     // Count online users (currently just a placeholder)
     const onlineUsers = 0; // In a real app, you would track this with user status
+    
+    // Ensure arrays are always valid
+    const safeTeamMembers = Array.isArray(teamMembers) ? teamMembers : [];
+    const safeUpcomingMeetings = Array.isArray(upcomingMeetings) ? upcomingMeetings : [];
 
     if (!user) {
         return (
             <div className="loading-container">
                 <div className="loading-spinner"></div>
-                <p>Loading...</p>
+                <p>Loading user data...</p>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="error-container">
+                <h2>Something went wrong</h2>
+                <p>{error}</p>
+                <button onClick={() => window.location.reload()}>Reload Page</button>
             </div>
         );
     }
@@ -97,7 +115,7 @@ function Dashboard() {
                             </div>
                             <div className="team-stats">
                                 <div className="stat-item">
-                                    <div className="stat-number">{loading ? '...' : teamMembers.length}</div>
+                                    <div className="stat-number">{loading ? '...' : safeTeamMembers.length}</div>
                                     <div className="stat-label">Total Members</div>
                                 </div>
                                 <div className="stat-item">
@@ -105,8 +123,8 @@ function Dashboard() {
                                     <div className="stat-label">Online</div>
                                 </div>
                                 <div className="stat-item">
-                                    <div className="stat-number">{meetingsLoading ? '...' : todaysMeetings.length}</div>
-                                    <div className="stat-label">Meetings Today</div>
+                                    <div className="stat-number">{meetingsLoading ? '...' : safeUpcomingMeetings.length}</div>
+                                    <div className="stat-label">Upcoming Meetings</div>
                                 </div>
                             </div>
                         </div>
@@ -119,15 +137,16 @@ function Dashboard() {
                             <div className="meetings-list">
                                 {meetingsLoading ? (
                                     <div className="loading-spinner"></div>
-                                ) : todaysMeetings.length > 0 ? (
-                                    todaysMeetings.map(meeting => (
-                                        <div key={meeting.id} className="meeting-item">
+                                ) : safeUpcomingMeetings.length > 0 ? (
+                                    safeUpcomingMeetings.map(meeting => (
+                                        <div key={meeting?.id || Math.random()} className="meeting-item">
                                             <div className="meeting-time">
-                                                <div className="time">{meeting.time}</div>
+                                                <div className="time">{meeting?.time || 'TBD'}</div>
+                                                <div className="date">{meeting?.date || 'TBD'}</div>
                                             </div>
                                             <div className="meeting-details">
-                                                <h4>{meeting.title}</h4>
-                                                <p>{meeting.description || 'No description'}</p>
+                                                <h4>{meeting?.title || 'Untitled Meeting'}</h4>
+                                                <p>{meeting?.description || 'No description'}</p>
                                             </div>
                                             <Link to={`/meetings`} className="btn-join">Join</Link>
                                         </div>

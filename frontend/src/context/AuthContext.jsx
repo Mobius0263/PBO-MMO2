@@ -26,11 +26,15 @@ export const AuthProvider = ({ children }) => {
         const initAuth = () => {
             try {
                 const currentUser = getCurrentUser();
+                console.log("Current user from localStorage:", currentUser);
+                
                 // Ensure complete image URL
                 if (currentUser) {
                     const processedUser = ensureFullImageUrl(currentUser);
                     console.log("User with processed image URL:", processedUser);
                     setUser(processedUser);
+                } else {
+                    console.log("No user found in localStorage");
                 }
             } catch (error) {
                 console.error('Auth initialization error:', error);

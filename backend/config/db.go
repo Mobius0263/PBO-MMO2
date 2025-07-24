@@ -28,6 +28,10 @@ func ConnectDB() {
 	userCollection := os.Getenv("USER_COLLECTION")
 	meetingCollection := os.Getenv("MEETING_COLLECTION") // Add this line
 
+	// Log what we're getting from environment
+	log.Printf("🔍 MONGOSTRING from env: %s", mongoString)
+	log.Printf("🔍 DB_NAME from env: %s", dbName)
+
 	if mongoString == "" {
 		mongoString = "mongodb://localhost:27017"
 		log.Println("⚠️ MONGOSTRING not set, using default:", mongoString)
@@ -52,6 +56,9 @@ func ConnectDB() {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
+	log.Printf("🔗 Attempting to connect to: %s", mongoString)
+	log.Printf("📂 Target database: %s", dbName)
+
 	clientOptions := options.Client().ApplyURI(mongoString)
 
 	client, err := mongo.Connect(ctx, clientOptions)
@@ -70,4 +77,10 @@ func ConnectDB() {
 	MeetingCollectionRef = DB.Collection(meetingCollection) // Add this line
 
 	log.Println("✅ MongoDB connected to database:", dbName)
+
+	// Additional verification - let's check the connection details
+	stats := client.Database("admin").RunCommand(ctx, map[string]interface{}{"serverStatus": 1})
+	if stats.Err() == nil {
+		log.Println("🌐 Successfully connected to MongoDB Atlas cluster")
+	}
 }

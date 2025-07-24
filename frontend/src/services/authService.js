@@ -23,14 +23,22 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
     response => response,
     error => {
-        console.error('API Error:', error.response || error);
+        console.error('API Error:', error);
         
+        // Check if it's a network error
+        if (error.code === 'ERR_NETWORK' || error.message === 'Network Error') {
+            console.error('Network Error: Cannot connect to backend server');
+            return Promise.reject(new Error('Cannot connect to server. Please check if the backend is running.'));
+        }
+        
+        // Handle other errors
         const errorMsg = 
             error.response?.data?.error || 
+            error.response?.data?.message ||
             error.message || 
             'Something went wrong';
             
-        return Promise.reject(new Error(errorMsg));
+        return Promise.reject(error); // Return original error instead of creating new one
     }
 );
 

@@ -37,22 +37,32 @@ export const getMeetings = async () => {
         console.log('Fetching meetings from API');
         const response = await api.get('/api/meetings');
         console.log('Meetings fetched:', response.data);
-        return response.data;
+        
+        // Ensure we return an array
+        const data = response.data || [];
+        return Array.isArray(data) ? data : [];
     } catch (error) {
         console.error('Error fetching meetings:', error);
-        throw error.response?.data || error;
+        
+        // Return empty array instead of throwing error
+        return [];
     }
 };
 
-// Get today's meetings
-export const getTodayMeetings = async () => {
+// Get upcoming meetings (new function)
+export const getUpcomingMeetings = async () => {
     try {
-        console.log('Fetching today\'s meetings from API');
-        const response = await api.get('/api/meetings/today');
-        console.log('Today\'s meetings fetched:', response.data);
-        return response.data;
+        console.log('Fetching upcoming meetings from API');
+        const response = await api.get('/api/meetings/upcoming');
+        console.log('Upcoming meetings fetched:', response.data);
+        
+        // Ensure we return an array
+        const data = response.data || [];
+        return Array.isArray(data) ? data : [];
     } catch (error) {
-        console.error('Error fetching today\'s meetings:', error);
-        throw error.response?.data || error;
+        console.error('Error fetching upcoming meetings:', error);
+        
+        // Return empty array instead of throwing error
+        return [];
     }
 };

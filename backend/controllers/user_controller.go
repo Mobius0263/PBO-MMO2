@@ -18,6 +18,15 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
+// GetTeamMembers godoc
+// @Summary Get team members
+// @Description Get list of team members with additional information
+// @Tags Users
+// @Produce json
+// @Security Bearer
+// @Success 200 {array} models.UserResponse "List of team members"
+// @Failure 500 {object} map[string]string "Internal server error"
+// @Router /api/team-members [get]
 // Mendapatkan daftar pengguna dengan informasi tambahan
 func GetTeamMembers(c *fiber.Ctx) error {
 	var users []models.UserResponse
@@ -53,46 +62,54 @@ func GetTeamMembers(c *fiber.Ctx) error {
 	return c.Status(200).JSON(users)
 }
 
+// GetUsers godoc
+// @Summary Get all users
+// @Description Get list of all users in the system
+// @Tags Users
+// @Produce json
+// @Success 200 {array} models.User "List of users"
+// @Failure 500 {object} map[string]string "Internal server error"
+// @Router /users [get]
 // Make sure this function is correctly implemented
 func GetUsers(c *fiber.Ctx) error {
-    ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-    defer cancel()
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
 
-    cursor, err := config.UserCollectionRef.Find(ctx, bson.M{})
-    if err != nil {
-        return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-            "error": "Failed to fetch users: " + err.Error(),
-        })
-    }
-    defer cursor.Close(ctx)
+	cursor, err := config.UserCollectionRef.Find(ctx, bson.M{})
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to fetch users: " + err.Error(),
+		})
+	}
+	defer cursor.Close(ctx)
 
-    var users []models.User
-    if err := cursor.All(ctx, &users); err != nil {
-        return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-            "error": "Failed to parse users data: " + err.Error(),
-        })
-    }
+	var users []models.User
+	if err := cursor.All(ctx, &users); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to parse users data: " + err.Error(),
+		})
+	}
 
-    // Convert to safe response without passwords
-    var safeUsers []fiber.Map
-    for _, user := range users {
-        // Ensure role is not empty
-        role := user.Role
-        if role == "" {
-            role = "Team Member" // Default role if none is set
-        }
-        
-        safeUsers = append(safeUsers, fiber.Map{
-            "id":           user.ID,
-            "nama":         user.Nama,
-            "email":        user.Email,
-            "role":         role,
-            "bio":          user.Bio,
-            "profileImage": user.ProfileImage,
-        })
-    }
+	// Convert to safe response without passwords
+	var safeUsers []fiber.Map
+	for _, user := range users {
+		// Ensure role is not empty
+		role := user.Role
+		if role == "" {
+			role = "Team Member" // Default role if none is set
+		}
 
-    return c.JSON(safeUsers)
+		safeUsers = append(safeUsers, fiber.Map{
+			"id":           user.ID,
+			"nama":         user.Nama,
+			"email":        user.Email,
+			"role":         role,
+			"bio":          user.Bio,
+			"profileImage": user.ProfileImage,
+		})
+	}
+
+	return c.JSON(safeUsers)
 }
 
 func CreateUser(c *fiber.Ctx) error {
@@ -148,102 +165,102 @@ func GetUserById(c *fiber.Ctx) error {
 }
 
 func UploadProfileImage(c *fiber.Ctx) error {
-    // Get user ID from JWT token
-    userClaims, ok := c.Locals("user").(jwt.MapClaims)
-    if !ok {
-        return c.Status(500).JSON(fiber.Map{"error": "Failed to parse user claims"})
-    }
-    
-    // Convert the ID to string safely
-    userID, ok := userClaims["id"].(string)
-    if !ok {
-        return c.Status(500).JSON(fiber.Map{"error": "Invalid user ID in token"})
-    }
+	// Get user ID from JWT token
+	userClaims, ok := c.Locals("user").(jwt.MapClaims)
+	if !ok {
+		return c.Status(500).JSON(fiber.Map{"error": "Failed to parse user claims"})
+	}
 
-    fmt.Println("Processing upload for user:", userID)
+	// Convert the ID to string safely
+	userID, ok := userClaims["id"].(string)
+	if !ok {
+		return c.Status(500).JSON(fiber.Map{"error": "Invalid user ID in token"})
+	}
 
-    // Get the file from request
-    file, err := c.FormFile("image")
-    if err != nil {
-        return c.Status(400).JSON(fiber.Map{"error": "No file provided or invalid file"})
-    }
+	fmt.Println("Processing upload for user:", userID)
 
-    // Create uploads directory if it doesn't exist
-    uploadDir := "./uploads"
-    if _, err := os.Stat(uploadDir); os.IsNotExist(err) {
-        err = os.MkdirAll(uploadDir, 0755)
-        if err != nil {
-            return c.Status(500).JSON(fiber.Map{"error": "Failed to create uploads directory"})
-        }
-    }
+	// Get the file from request
+	file, err := c.FormFile("image")
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "No file provided or invalid file"})
+	}
 
-    // Generate file name with timestamp to avoid duplicates
-    timeStamp := time.Now().UnixNano()
-    fileName := fmt.Sprintf("%d_%s", timeStamp, file.Filename)
-    filePath := fmt.Sprintf("%s/%s", uploadDir, fileName)
+	// Create uploads directory if it doesn't exist
+	uploadDir := "./uploads"
+	if _, err := os.Stat(uploadDir); os.IsNotExist(err) {
+		err = os.MkdirAll(uploadDir, 0755)
+		if err != nil {
+			return c.Status(500).JSON(fiber.Map{"error": "Failed to create uploads directory"})
+		}
+	}
 
-    // Save the file
-    if err := c.SaveFile(file, filePath); err != nil {
-        fmt.Println("Error saving file:", err)
-        return c.Status(500).JSON(fiber.Map{"error": "Failed to save the file"})
-    }
+	// Generate file name with timestamp to avoid duplicates
+	timeStamp := time.Now().UnixNano()
+	fileName := fmt.Sprintf("%d_%s", timeStamp, file.Filename)
+	filePath := fmt.Sprintf("%s/%s", uploadDir, fileName)
 
-    // Create image URL - PENTING: path harus mulai dengan '/'
-    imageURL := fmt.Sprintf("/uploads/%s", fileName)
-    fmt.Println("Image saved at:", imageURL)
+	// Save the file
+	if err := c.SaveFile(file, filePath); err != nil {
+		fmt.Println("Error saving file:", err)
+		return c.Status(500).JSON(fiber.Map{"error": "Failed to save the file"})
+	}
 
-    // Update user profile in database
-    var result *mongo.UpdateResult
-    var updateErr error
-    ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-    defer cancel()
+	// Create image URL - PENTING: path harus mulai dengan '/'
+	imageURL := fmt.Sprintf("/uploads/%s", fileName)
+	fmt.Println("Image saved at:", imageURL)
 
-    // Try with ObjectID first
-    objectID, err := primitive.ObjectIDFromHex(userID)
-    if err == nil {
-        // Valid ObjectID
-        result, updateErr = config.UserCollectionRef.UpdateOne(
-            ctx,
-            bson.M{"_id": objectID},
-            bson.M{"$set": bson.M{"profileImage": imageURL}},
-        )
-        
-        if updateErr == nil && result.MatchedCount > 0 {
-            fmt.Println("Updated with ObjectID successfully:", result)
-            return c.JSON(fiber.Map{
-                "message": "Image uploaded successfully",
-                "imageUrl": imageURL,
-            })
-        }
-    }
-    
-    // Fall back to string ID
-    result, updateErr = config.UserCollectionRef.UpdateOne(
-        ctx,
-        bson.M{"_id": userID},
-        bson.M{"$set": bson.M{"profileImage": imageURL}},
-    )
-    
-    if updateErr != nil {
-        // Clean up file on error
-        os.Remove(filePath)
-        fmt.Println("Error updating profile:", updateErr)
-        return c.Status(500).JSON(fiber.Map{"error": "Failed to update profile"})
-    }
-    
-    if result.MatchedCount == 0 {
-        // No document matched, clean up file
-        os.Remove(filePath)
-        fmt.Println("No user found with ID:", userID)
-        return c.Status(404).JSON(fiber.Map{"error": "User not found"})
-    }
+	// Update user profile in database
+	var result *mongo.UpdateResult
+	var updateErr error
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
 
-    fmt.Println("Update successful with string ID:", result)
-    
-    return c.JSON(fiber.Map{
-        "message": "Image uploaded successfully",
-        "imageUrl": imageURL,
-    })
+	// Try with ObjectID first
+	objectID, err := primitive.ObjectIDFromHex(userID)
+	if err == nil {
+		// Valid ObjectID
+		result, updateErr = config.UserCollectionRef.UpdateOne(
+			ctx,
+			bson.M{"_id": objectID},
+			bson.M{"$set": bson.M{"profileImage": imageURL}},
+		)
+
+		if updateErr == nil && result.MatchedCount > 0 {
+			fmt.Println("Updated with ObjectID successfully:", result)
+			return c.JSON(fiber.Map{
+				"message":  "Image uploaded successfully",
+				"imageUrl": imageURL,
+			})
+		}
+	}
+
+	// Fall back to string ID
+	result, updateErr = config.UserCollectionRef.UpdateOne(
+		ctx,
+		bson.M{"_id": userID},
+		bson.M{"$set": bson.M{"profileImage": imageURL}},
+	)
+
+	if updateErr != nil {
+		// Clean up file on error
+		os.Remove(filePath)
+		fmt.Println("Error updating profile:", updateErr)
+		return c.Status(500).JSON(fiber.Map{"error": "Failed to update profile"})
+	}
+
+	if result.MatchedCount == 0 {
+		// No document matched, clean up file
+		os.Remove(filePath)
+		fmt.Println("No user found with ID:", userID)
+		return c.Status(404).JSON(fiber.Map{"error": "User not found"})
+	}
+
+	fmt.Println("Update successful with string ID:", result)
+
+	return c.JSON(fiber.Map{
+		"message":  "Image uploaded successfully",
+		"imageUrl": imageURL,
+	})
 }
 
 // UpdateUser function

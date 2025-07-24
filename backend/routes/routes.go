@@ -5,6 +5,7 @@ import (
 	"backend/middleware"
 
 	"github.com/gofiber/fiber/v2"
+	fiberSwagger "github.com/swaggo/fiber-swagger"
 )
 
 func SetupRoutes(app *fiber.App) {
@@ -12,6 +13,9 @@ func SetupRoutes(app *fiber.App) {
 	app.Get("/", func(c *fiber.Ctx) error {
 		return c.SendString("API Server is running")
 	})
+
+	// Swagger documentation route
+	app.Get("/swagger/*", fiberSwagger.WrapHandler)
 
 	// Auth routes - di kedua lokasi untuk kompatibilitas
 	// 1. Tanpa prefix /auth untuk frontend lama
@@ -44,6 +48,7 @@ func SetupRoutes(app *fiber.App) {
 	api.Post("/meetings", controllers.CreateMeeting)
 	api.Get("/meetings", controllers.GetMeetings)
 	api.Get("/meetings/today", controllers.GetTodayMeetings)
+	api.Get("/meetings/upcoming", controllers.GetUpcomingMeetings)
 
 	// Health check
 	app.Get("/health", func(c *fiber.Ctx) error {

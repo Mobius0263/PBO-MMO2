@@ -1,0 +1,302 @@
+basePath: /
+definitions:
+  models.Meeting:
+    properties:
+      allMembers:
+        type: boolean
+      createdAt:
+        type: string
+      createdBy:
+        type: string
+      date:
+        type: string
+      description:
+        type: string
+      duration:
+        type: integer
+      id:
+        type: string
+      participants:
+        items:
+          type: string
+        type: array
+      time:
+        type: string
+      title:
+        type: string
+    type: object
+  models.User:
+    properties:
+      bio:
+        type: string
+      email:
+        type: string
+      id:
+        type: string
+      lastActive:
+        type: string
+      nama:
+        type: string
+      password:
+        type: string
+      profileImage:
+        type: string
+      role:
+        type: string
+      status:
+        type: string
+    type: object
+  models.UserResponse:
+    properties:
+      bio:
+        type: string
+      email:
+        type: string
+      id:
+        type: string
+      lastActive:
+        type: string
+      nama:
+        type: string
+      profileImage:
+        type: string
+      role:
+        type: string
+      status:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: support@swagger.io
+    name: API Support
+    url: http://www.swagger.io/support
+  description: This is the API documentation for CoEmotion meeting management system
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  termsOfService: http://swagger.io/terms/
+  title: CoEmotion API
+  version: "1.0"
+paths:
+  /api/meetings:
+    get:
+      description: Get list of all meetings
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of meetings
+          schema:
+            items:
+              $ref: '#/definitions/models.Meeting'
+            type: array
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Get all meetings
+      tags:
+      - Meetings
+    post:
+      consumes:
+      - application/json
+      description: Create a new meeting with the provided details
+      parameters:
+      - description: Meeting data
+        in: body
+        name: meeting
+        required: true
+        schema:
+          $ref: '#/definitions/models.Meeting'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Meeting created successfully
+          schema:
+            $ref: '#/definitions/models.Meeting'
+        "400":
+          description: Invalid request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Create a new meeting
+      tags:
+      - Meetings
+  /api/meetings/today:
+    get:
+      description: Get list of meetings scheduled for today
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of today's meetings
+          schema:
+            items:
+              $ref: '#/definitions/models.Meeting'
+            type: array
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Get today's meetings
+      tags:
+      - Meetings
+  /api/team-members:
+    get:
+      description: Get list of team members with additional information
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of team members
+          schema:
+            items:
+              $ref: '#/definitions/models.UserResponse'
+            type: array
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Get team members
+      tags:
+      - Users
+  /login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticate user with email and password
+      parameters:
+      - description: Login credentials
+        in: body
+        name: credentials
+        required: true
+        schema:
+          properties:
+            email:
+              type: string
+            password:
+              type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Login successful
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Authentication failed
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: User login
+      tags:
+      - Auth
+  /register:
+    post:
+      consumes:
+      - application/json
+      description: Register a new user with email and password
+      parameters:
+      - description: User registration data
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/models.User'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Registration successful
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "409":
+          description: Email already registered
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Register a new user
+      tags:
+      - Auth
+  /users:
+    get:
+      description: Get list of all users in the system
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of users
+          schema:
+            items:
+              $ref: '#/definitions/models.User'
+            type: array
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get all users
+      tags:
+      - Users
+schemes:
+- http
+securityDefinitions:
+  Bearer:
+    description: Type "Bearer" followed by a space and JWT token.
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

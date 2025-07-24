@@ -14,6 +14,18 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
+// CreateMeeting godoc
+// @Summary Create a new meeting
+// @Description Create a new meeting with the provided details
+// @Tags Meetings
+// @Accept json
+// @Produce json
+// @Security Bearer
+// @Param meeting body models.Meeting true "Meeting data"
+// @Success 201 {object} models.Meeting "Meeting created successfully"
+// @Failure 400 {object} map[string]string "Invalid request"
+// @Failure 500 {object} map[string]string "Internal server error"
+// @Router /api/meetings [post]
 // CreateMeeting creates a new meeting
 func CreateMeeting(c *fiber.Ctx) error {
 	// Parse request body
@@ -58,6 +70,15 @@ func CreateMeeting(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusCreated).JSON(meeting)
 }
 
+// GetMeetings godoc
+// @Summary Get all meetings
+// @Description Get list of all meetings
+// @Tags Meetings
+// @Produce json
+// @Security Bearer
+// @Success 200 {array} models.Meeting "List of meetings"
+// @Failure 500 {object} map[string]string "Internal server error"
+// @Router /api/meetings [get]
 // GetMeetings returns all meetings
 func GetMeetings(c *fiber.Ctx) error {
 	// Set context with timeout
@@ -95,6 +116,84 @@ func GetMeetings(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(meetingResponses)
 }
 
+// GetUpcomingMeetings godoc
+// @Summary Get upcoming meetings
+// @Description Get list of meetings that are scheduled for today and haven't started yet, or are in the future
+// @Tags Meetings
+// @Produce json
+// @Security Bearer
+// @Success 200 {array} models.Meeting "List of upcoming meetings"
+// @Failure 500 {object} map[string]string "Internal server error"
+// @Router /api/meetings/upcoming [get]
+func GetUpcomingMeetings(c *fiber.Ctx) error {
+	now := time.Now()
+	today := now.Format("2006-01-02")
+	currentTime := now.Format("15:04")
+
+	fmt.Printf("Fetching upcoming meetings from today: %s, current time: %s\n", today, currentTime)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	// Create aggregation pipeline to get upcoming meetings
+	pipeline := []bson.M{
+		// Get meetings that are either:
+		// 1. Today but start time is in the future
+		// 2. Future dates
+		{
+			"$match": bson.M{
+				"$or": []bson.M{
+					{
+						"$and": []bson.M{
+							{"date": today},
+							{"time": bson.M{"$gte": currentTime}},
+						},
+					},
+					{"date": bson.M{"$gt": today}},
+				},
+			},
+		},
+		// Sort by date, then by time
+		{
+			"$sort": bson.M{
+				"date": 1,
+				"time": 1,
+			},
+		},
+	}
+
+	cursor, err := config.MeetingCollectionRef.Aggregate(ctx, pipeline)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to fetch upcoming meetings"})
+	}
+	defer cursor.Close(ctx)
+
+	var meetings []models.Meeting
+	if err := cursor.All(ctx, &meetings); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to decode meetings"})
+	}
+
+	fmt.Printf("Found %d upcoming meetings\n", len(meetings))
+
+	// Build response with user details
+	var meetingResponses []models.MeetingResponse
+	for _, meeting := range meetings {
+		response := populateMeetingResponse(meeting)
+		meetingResponses = append(meetingResponses, response)
+	}
+
+	return c.Status(fiber.StatusOK).JSON(meetingResponses)
+}
+
+// GetTodayMeetings godoc
+// @Summary Get today's meetings
+// @Description Get list of meetings scheduled for today
+// @Tags Meetings
+// @Produce json
+// @Security Bearer
+// @Success 200 {array} models.Meeting "List of today's meetings"
+// @Failure 500 {object} map[string]string "Internal server error"
+// @Router /api/meetings/today [get]
 // GetTodayMeetings returns meetings for today
 func GetTodayMeetings(c *fiber.Ctx) error {
 	// Get current date

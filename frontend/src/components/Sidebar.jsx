@@ -47,7 +47,7 @@ function Sidebar() {
                     </Link>
                 </li>
                 <li className={isActive('/meetings') ? 'active' : ''}>
-                    <Link to="/meetings" className={({ isActive }) => isActive ? 'active' : ''}>
+                    <Link to="/meetings">
                         <i className="fas fa-video"></i>
                         <span>Meetings</span>
                     </Link>

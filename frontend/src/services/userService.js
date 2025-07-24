@@ -28,13 +28,16 @@ export const getUsers = async () => {
         const response = await api.get('/users');
         console.log('API response:', response);
 
+        // Ensure we have valid data
+        const data = response.data || [];
+        
         // Add baseURL to profileImage if exists
-        const users = response.data.map(user => {
-            if (user.profileImage && !user.profileImage.startsWith('http')) {
+        const users = Array.isArray(data) ? data.map(user => {
+            if (user && user.profileImage && !user.profileImage.startsWith('http')) {
                 user.profileImage = API_URL + user.profileImage;
             }
             return user;
-        });
+        }) : [];
 
         return users;
     } catch (error) {

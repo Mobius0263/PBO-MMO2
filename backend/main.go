@@ -11,7 +11,30 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/joho/godotenv"
+
+	_ "backend/docs" // Import generated docs
 )
+
+// @title CoEmotion API
+// @version 1.0
+// @description This is the API documentation for CoEmotion meeting management system
+// @termsOfService http://swagger.io/terms/
+
+// @contact.name API Support
+// @contact.url http://www.swagger.io/support
+// @contact.email support@swagger.io
+
+// @license.name MIT
+// @license.url https://opensource.org/licenses/MIT
+
+// @host localhost:8080
+// @BasePath /
+// @schemes http
+
+// @securityDefinitions.apikey Bearer
+// @in header
+// @name Authorization
+// @description Type "Bearer" followed by a space and JWT token.
 
 func main() {
 	err := godotenv.Load()
@@ -50,7 +73,7 @@ func main() {
 
 	// Konfigurasi CORS yang benar
 	app.Use(cors.New(cors.Config{
-		AllowOrigins:     "http://localhost:5173", // Mengizinkan semua asal
+		AllowOrigins:     "http://localhost:5173,http://localhost:5174", // Allow both ports
 		AllowMethods:     "GET,POST,PUT,DELETE,OPTIONS",
 		AllowHeaders:     "Origin, Content-Type, Accept, Authorization",
 		AllowCredentials: true,
