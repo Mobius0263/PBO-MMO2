@@ -7,6 +7,7 @@ import Dashboard from './components/Dashboard';
 import MyTeam from './components/MyTeam';
 import Settings from './components/Settings';
 import Meetings from './components/Meetings';
+import MeetingDetail from './components/MeetingDetail'; // Import the MeetingDetail component
 import ProtectedRoute from './components/ProtectedRoute';
 import ErrorBoundary from './components/ErrorBoundary';
 import './App.css';
@@ -34,7 +35,7 @@ function SimpleLoginForm() {
     <div className="auth-container">
       <div className="auth-form-container">
         <h1>{isLoginView ? 'Login' : 'Register'}</h1>
-        
+
         <form onSubmit={handleSubmit}>
           {!isLoginView && (
             <div className="form-group">
@@ -48,7 +49,7 @@ function SimpleLoginForm() {
               />
             </div>
           )}
-          
+
           <div className="form-group">
             <label htmlFor="email">Email</label>
             <input
@@ -60,7 +61,7 @@ function SimpleLoginForm() {
               required
             />
           </div>
-          
+
           <div className="form-group">
             <label htmlFor="password">Password</label>
             <input
@@ -72,7 +73,7 @@ function SimpleLoginForm() {
               required
             />
           </div>
-          
+
           {!isLoginView && (
             <div className="form-group">
               <label htmlFor="confirmPassword">Confirm Password</label>
@@ -85,15 +86,15 @@ function SimpleLoginForm() {
               />
             </div>
           )}
-          
+
           <button type="submit" className="auth-button">
             {isLoginView ? 'Login' : 'Register'}
           </button>
         </form>
-        
+
         <p className="auth-redirect">
           {isLoginView ? "Don't have an account?" : 'Already have an account?'}
-          <button 
+          <button
             onClick={() => setIsLoginView(!isLoginView)}
             className="switch-button"
           >
@@ -114,40 +115,47 @@ function App() {
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
-            <Route 
-              path="/dashboard" 
+            <Route
+              path="/dashboard"
               element={
                 <ProtectedRoute>
                   <Dashboard />
                 </ProtectedRoute>
-              } 
+              }
             />
-            <Route 
-              path="/my-team" 
+            <Route
+              path="/my-team"
               element={
                 <ProtectedRoute>
                   <MyTeam />
                 </ProtectedRoute>
-              } 
+              }
             />
-            <Route 
-              path="/meetings" 
+            <Route
+              path="/meetings"
               element={
                 <ProtectedRoute>
                   <Meetings />
                 </ProtectedRoute>
-              } 
+              }
             />
-
-            <Route 
-              path="/settings" 
+            <Route
+              path="/meeting/:id"
+              element={
+                <ProtectedRoute>
+                  <MeetingDetail />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/settings"
               element={
                 <ProtectedRoute>
                   <Settings />
                 </ProtectedRoute>
-              } 
+              }
             />
-            
+
             <Route path="/" element={<Navigate to="/login" replace />} />
           </Routes>
         </AuthProvider>

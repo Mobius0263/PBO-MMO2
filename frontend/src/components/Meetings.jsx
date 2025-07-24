@@ -301,6 +301,40 @@ function Meetings() {
     // List of weekday names
     const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
+    const renderParticipants = (participants) => {
+        if (!participants || participants.length === 0) {
+            return <div className="no-participants">No participants</div>;
+        }
+
+        return (
+            <div className="participants-detail">
+                {participants.slice(0, 3).map((participant, index) => (
+                    <div key={participant?.id || index} className="participant-avatar">
+                        {participant?.profileImage ? (
+                            <img
+                                src={participant.profileImage}
+                                alt={participant.nama || 'User'}
+                                className="participant-img"
+                                onError={(e) => {
+                                    e.target.onerror = null;
+                                    e.target.style.display = 'none';
+                                    e.target.parentNode.innerHTML = `<div class="text-avatar">${participant?.nama?.charAt(0) || '?'}</div>`;
+                                }}
+                            />
+                        ) : (
+                            <div className="text-avatar">
+                                {participant?.nama?.charAt(0) || '?'}
+                            </div>
+                        )}
+                    </div>
+                ))}
+                {participants.length > 3 && (
+                    <div className="participant-more">+{participants.length - 3}</div>
+                )}
+            </div>
+        );
+    };
+
     return (
         <div className="dashboard-main">
             <Sidebar />
@@ -398,27 +432,17 @@ function Meetings() {
                                                     All members
                                                 </div>
                                             ) : (
-                                                <>
-                                                    {meeting.participants.slice(0, 3).map((participant, index) => (
-                                                        <div key={participant.id} className="participant">
-                                                            {participant.profileImage ? (
-                                                                <img src={participant.profileImage} alt={participant.nama} />
-                                                            ) : (
-                                                                <div className="text-avatar">
-                                                                    {participant.nama?.charAt(0) || '?'}
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                    ))}
-                                                    {meeting.participants.length > 3 && (
-                                                        <div className="participant-count">+{meeting.participants.length - 3}</div>
-                                                    )}
-                                                </>
+                                                renderParticipants(meeting.participants)
                                             )}
                                         </div>
                                     </div>
                                     <div className="meeting-actions">
-                                        <button className="btn-details">Details</button>
+                                        <button
+                                            className="btn-details"
+                                            onClick={() => navigate(`/meeting/${meeting.id}`)}
+                                        >
+                                            Details
+                                        </button>
                                     </div>
                                 </div>
                             ))
@@ -459,27 +483,17 @@ function Meetings() {
                                                     All members
                                                 </div>
                                             ) : (
-                                                <>
-                                                    {meeting.participants.slice(0, 3).map((participant, index) => (
-                                                        <div key={participant.id} className="participant">
-                                                            {participant.profileImage ? (
-                                                                <img src={participant.profileImage} alt={participant.nama} />
-                                                            ) : (
-                                                                <div className="text-avatar">
-                                                                    {participant.nama?.charAt(0) || '?'}
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                    ))}
-                                                    {meeting.participants.length > 3 && (
-                                                        <div className="participant-count">+{meeting.participants.length - 3}</div>
-                                                    )}
-                                                </>
+                                                renderParticipants(meeting.participants)
                                             )}
                                         </div>
                                     </div>
                                     <div className="meeting-actions">
-                                        <button className="btn-details">Details</button>
+                                        <button
+                                            className="btn-details"
+                                            onClick={() => navigate(`/meeting/${meeting.id}`)}
+                                        >
+                                            Details
+                                        </button>
                                     </div>
                                 </div>
                             ))
