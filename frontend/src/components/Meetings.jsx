@@ -14,6 +14,8 @@ function Meetings() {
     const [showNewMeetingModal, setShowNewMeetingModal] = useState(false);
     const [meetings, setMeetings] = useState([]);
     const [teamMembers, setTeamMembers] = useState([]);
+    const [showMeetingDetailModal, setShowMeetingDetailModal] = useState(false);
+    const [selectedMeeting, setSelectedMeeting] = useState(null);
     const navigate = useNavigate();
 
     // New meeting form state
@@ -213,22 +215,22 @@ function Meetings() {
 
     // Get today's meetings
     const getTodaysMeetings = () => {
-        const today = new Date().toDateString();
+        const selectedDateStr = selectedDate.toDateString();
         return getFilteredMeetings().filter(meeting => {
             const meetingDate = new Date(`${meeting.date}T${meeting.time}`);
-            return meetingDate.toDateString() === today;
+            return meetingDate.toDateString() === selectedDateStr;
         });
     };
 
     // Get tomorrow's meetings
     const getTomorrowsMeetings = () => {
-        const tomorrow = new Date();
-        tomorrow.setDate(tomorrow.getDate() + 1);
-        const tomorrowStr = tomorrow.toDateString();
+        const nextDay = new Date(selectedDate);
+        nextDay.setDate(nextDay.getDate() + 1);
+        const nextDayStr = nextDay.toDateString();
 
         return getFilteredMeetings().filter(meeting => {
             const meetingDate = new Date(`${meeting.date}T${meeting.time}`);
-            return meetingDate.toDateString() === tomorrowStr;
+            return meetingDate.toDateString() === nextDayStr;
         });
     };
 
@@ -335,6 +337,11 @@ function Meetings() {
         );
     };
 
+    const openMeetingDetail = (meeting) => {
+        setSelectedMeeting(meeting);
+        setShowMeetingDetailModal(true);
+    };
+
     return (
         <div className="dashboard-main">
             <Sidebar />
@@ -359,22 +366,10 @@ function Meetings() {
 
                 <div className="meetings-view-tabs">
                     <button
-                        className={view === 'upcoming' ? 'active' : ''}
+                        className="active"
                         onClick={() => setView('upcoming')}
                     >
                         Upcoming
-                    </button>
-                    <button
-                        className={view === 'past' ? 'active' : ''}
-                        onClick={() => setView('past')}
-                    >
-                        Past
-                    </button>
-                    <button
-                        className={view === 'all' ? 'active' : ''}
-                        onClick={() => setView('all')}
-                    >
-                        All
                     </button>
                 </div>
 
@@ -410,7 +405,11 @@ function Meetings() {
                 </div>
 
                 <div className="meetings-section">
-                    <h3>Today's Meetings</h3>
+                    <h3>
+                        {selectedDate.toDateString() === new Date().toDateString()
+                            ? "Today's Meetings"
+                            : `Meetings for ${selectedDate.toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}`}
+                    </h3>
                     <div className="meeting-list">
                         {todaysMeetings.length > 0 ? (
                             todaysMeetings.map(meeting => (
@@ -439,7 +438,7 @@ function Meetings() {
                                     <div className="meeting-actions">
                                         <button
                                             className="btn-details"
-                                            onClick={() => navigate(`/meeting/${meeting.id}`)}
+                                            onClick={() => openMeetingDetail(meeting)}
                                         >
                                             Details
                                         </button>
@@ -461,7 +460,18 @@ function Meetings() {
                 </div>
 
                 <div className="meetings-section">
-                    <h3>Tomorrow's Meetings</h3>
+                    <h3>
+                        {(() => {
+                            const nextDay = new Date(selectedDate);
+                            nextDay.setDate(nextDay.getDate() + 1);
+                            const tomorrow = new Date();
+                            tomorrow.setDate(tomorrow.getDate() + 1);
+
+                            return nextDay.toDateString() === tomorrow.toDateString()
+                                ? "Tomorrow's Meetings"
+                                : `Meetings for ${nextDay.toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}`;
+                        })()}
+                    </h3>
                     <div className="meeting-list">
                         {tomorrowsMeetings.length > 0 ? (
                             tomorrowsMeetings.map(meeting => (
@@ -490,7 +500,7 @@ function Meetings() {
                                     <div className="meeting-actions">
                                         <button
                                             className="btn-details"
-                                            onClick={() => navigate(`/meeting/${meeting.id}`)}
+                                            onClick={() => openMeetingDetail(meeting)}
                                         >
                                             Details
                                         </button>
@@ -670,6 +680,119 @@ function Meetings() {
                                     </button>
                                 </div>
                             </form>
+                        </div>
+                    </div>
+                )}
+
+                {/* Meeting Detail Modal */}
+                {showMeetingDetailModal && selectedMeeting && (
+                    <div className="modal-overlay" onClick={() => setShowMeetingDetailModal(false)}>
+                        <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                            <div className="modal-header">
+                                <h3>Meeting Details</h3>
+                                <button
+                                    className="btn-close"
+                                    onClick={() => setShowMeetingDetailModal(false)}
+                                >
+                                    <i className="fas fa-times"></i>
+                                </button>
+                            </div>
+
+                            <div className="meeting-detail-content">
+                                <div className="detail-group">
+                                    <label>Meeting Title</label>
+                                    <div className="detail-value">{selectedMeeting.title}</div>
+                                </div>
+
+                                <div className="detail-group">
+                                    <label>Description</label>
+                                    <div className="detail-value description">
+                                        {selectedMeeting.description || 'No description provided'}
+                                    </div>
+                                </div>
+
+                                <div className="detail-row">
+                                    <div className="detail-group">
+                                        <label>Date</label>
+                                        <div className="detail-value">
+                                            {new Date(selectedMeeting.date).toLocaleDateString(undefined, {
+                                                weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+                                            })}
+                                        </div>
+                                    </div>
+
+                                    <div className="detail-group">
+                                        <label>Time</label>
+                                        <div className="detail-value">{selectedMeeting.time}</div>
+                                    </div>
+
+                                    <div className="detail-group">
+                                        <label>Duration</label>
+                                        <div className="detail-value">{selectedMeeting.duration} minutes</div>
+                                    </div>
+                                </div>
+
+                                <div className="detail-group">
+                                    <label>Participants</label>
+                                    <div className="detail-value">
+                                        {selectedMeeting.allMembers ? (
+                                            <div className="all-members-badge">
+                                                <i className="fas fa-users"></i> All team members
+                                            </div>
+                                        ) : (
+                                            <div className="participants-list-detail">
+                                                {selectedMeeting.participants && selectedMeeting.participants.length > 0 ? (
+                                                    selectedMeeting.participants.map((participant, index) => (
+                                                        <div key={participant?.id || index} className="participant-item-detail">
+                                                            <div className="participant-avatar">
+                                                                {participant?.profileImage ? (
+                                                                    <img
+                                                                        src={participant.profileImage}
+                                                                        alt={participant.nama || 'Participant'}
+                                                                        onError={(e) => {
+                                                                            e.target.onerror = null;
+                                                                            e.target.parentNode.innerHTML = `<div class="text-avatar">${(participant?.nama?.charAt(0) || '?').toUpperCase()}</div>`;
+                                                                        }}
+                                                                    />
+                                                                ) : (
+                                                                    <div className="text-avatar">
+                                                                        {(participant?.nama?.charAt(0) || '?').toUpperCase()}
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                            <div className="participant-info">
+                                                                <span className="participant-name">{participant?.nama || 'Unknown'}</span>
+                                                                <span className="participant-role">{participant?.role || 'Member'}</span>
+                                                            </div>
+                                                        </div>
+                                                    ))
+                                                ) : (
+                                                    <div className="no-participants">No participants</div>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div className="detail-group">
+                                    <label>Created By</label>
+                                    <div className="detail-value creator-info">
+                                        {selectedMeeting.createdBy?.nama || 'Unknown user'}
+                                    </div>
+                                </div>
+
+                                <div className="modal-actions">
+                                    <button className="btn-join-meeting">
+                                        <i className="fas fa-video"></i> Join Meeting
+                                    </button>
+                                    <button
+                                        className="btn-close-modal"
+                                        onClick={() => setShowMeetingDetailModal(false)}
+                                    >
+                                        Close
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 )}
