@@ -6,6 +6,19 @@ const API_URL = 'http://localhost:8080';
 
 export const AuthContext = createContext();
 
+// Define the helper functions at the module level, not inside a component
+export const isAdmin = (user) => {
+    return user?.role === 'Admin';
+};
+
+export const isLeader = (user) => {
+    return user?.role === 'Team Leader';
+};
+
+export const isMember = (user) => {
+    return ['Team Member', 'Developer', 'Designer', 'Product Manager'].includes(user?.role);
+};
+
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -27,7 +40,7 @@ export const AuthProvider = ({ children }) => {
             try {
                 const currentUser = getCurrentUser();
                 console.log("Current user from localStorage:", currentUser);
-                
+
                 // Ensure complete image URL
                 if (currentUser) {
                     const processedUser = ensureFullImageUrl(currentUser);
@@ -63,9 +76,6 @@ export const AuthProvider = ({ children }) => {
     };
 
     // Update user with new properties
-    // Make sure the updateUser function in the context properly updates the role
-
-    // Update user with new properties
     const updateUser = (newUserData) => {
         const updatedUser = {
             ...user,
@@ -84,6 +94,16 @@ export const AuthProvider = ({ children }) => {
         return processedUser;
     };
 
+    const authContextValue = {
+        user,
+        loginUser,
+        logoutUser,
+        updateUser,
+        isAdmin: () => isAdmin(user),
+        isLeader: () => isLeader(user),
+        isMember: () => isMember(user)
+    };
+
     if (loading) {
         return (
             <div className="loading-container">
@@ -94,7 +114,7 @@ export const AuthProvider = ({ children }) => {
     }
 
     return (
-        <AuthContext.Provider value={{ user, loginUser, logoutUser, updateUser }}>
+        <AuthContext.Provider value={authContextValue}>
             {children}
         </AuthContext.Provider>
     );

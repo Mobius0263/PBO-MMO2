@@ -1,7 +1,7 @@
 import { useState, useEffect, useContext } from 'react';
-import { AuthContext } from '../context/AuthContext';
+import { AuthContext, isAdmin } from '../context/AuthContext';
 import Sidebar from './Sidebar';
-import { getUsers } from '../services/userService';
+import { getUsers, deleteUser, updateUser } from '../services/userService';
 import '../styles/MyTeam.css';
 
 function MyTeam() {
@@ -11,15 +11,18 @@ function MyTeam() {
     const [error, setError] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedRole, setSelectedRole] = useState('All Roles');
+    const [showManageModal, setShowManageModal] = useState(false);
+    const [selectedMember, setSelectedMember] = useState(null);
+    const [newRole, setNewRole] = useState('');
 
     const API_URL = 'http://localhost:8080';
-    
+
     // Helper function to get name initials
     const getInitial = (name) => {
         if (!name) return '?';
         return name.charAt(0).toUpperCase();
     };
-    
+
     // Fetch users from database
     useEffect(() => {
         const fetchTeamMembers = async () => {
@@ -32,21 +35,21 @@ function MyTeam() {
                 // Format response to handle image URLs
                 const formattedMembers = response.map(member => {
                     console.log("Processing member:", member.nama, "Profile image:", member.profileImage);
-                    
+
                     // Ensure profileImage has full URL if exists
                     if (member.profileImage) {
                         if (!member.profileImage.startsWith('http')) {
                             // Ensure no duplicate slashes
                             const baseUrl = API_URL.endsWith('/') ? API_URL.slice(0, -1) : API_URL;
                             const imagePath = member.profileImage.startsWith('/') ? member.profileImage : '/' + member.profileImage;
-                            
+
                             member.profileImage = `${baseUrl}${imagePath}`;
                         }
                         console.log("Formatted image URL:", member.profileImage);
                     } else {
                         console.log("No profile image for this member");
                     }
-                    
+
                     return member;
                 });
 
@@ -91,6 +94,59 @@ function MyTeam() {
         return matchesSearch && matchesRole;
     });
 
+    const openManageMember = (member) => {
+        setSelectedMember(member);
+        setNewRole(member.role || 'Team Member');
+        setShowManageModal(true);
+    };
+
+    const closeManageMember = () => {
+        setSelectedMember(null);
+        setShowManageModal(false);  // Changed from setShowManageMember to setShowManageModal
+    };
+
+    const handleRoleChange = async () => {
+        if (!selectedMember) return;
+
+        try {
+            const updatedMember = await updateUser(selectedMember.id, { role: newRole });
+
+            // Update the local state
+            setTeamMembers(prevMembers =>
+                prevMembers.map(member =>
+                    member.id === selectedMember.id ? { ...member, role: newRole } : member
+                )
+            );
+
+            // Close the modal
+            closeManageMember();
+        } catch (error) {
+            console.error('Error updating role:', error);
+            alert('Failed to update role. Please try again.');
+        }
+    };
+
+    const handleDeleteMember = async () => {
+        if (!selectedMember) return;
+
+        if (window.confirm(`Are you sure you want to delete ${selectedMember.nama}?`)) {
+            try {
+                await deleteUser(selectedMember.id);
+
+                // Update the local state
+                setTeamMembers(prevMembers =>
+                    prevMembers.filter(member => member.id !== selectedMember.id)
+                );
+
+                // Close the modal
+                closeManageMember();
+            } catch (error) {
+                console.error('Error deleting user:', error);
+                alert('Failed to delete user. Please try again.');
+            }
+        }
+    };
+
     if (!user) {
         return (
             <div className="loading-container">
@@ -116,9 +172,17 @@ function MyTeam() {
                         />
                     </div>
                     <div className="header-actions">
-                        <button className="btn-add-member">
-                            <i className="fas fa-user-plus"></i> Add Member
-                        </button>
+                        {isAdmin(user) && (
+                            <button
+                                className="btn-add-member"
+                                onClick={() => {
+                                    setSelectedMember(null); // Reset selected member to avoid issues
+                                    setShowManageModal(true);
+                                }}
+                            >
+                                <i className="fas fa-user-cog"></i> Manage Member
+                            </button>
+                        )}
                         <div className="notification-icon">
                             <i className="icon-bell"></i>
                             <span className="notification-badge">1</span>
@@ -161,7 +225,12 @@ function MyTeam() {
                         <div className="team-members-grid">
                             {filteredMembers.length > 0 ? (
                                 filteredMembers.map(member => (
-                                    <div key={member.id || member._id} className="member-card">
+                                    <div
+                                        key={member.id || member._id}
+                                        className="member-card"
+                                        onClick={() => openManageMember(member)}
+                                        style={{ cursor: 'pointer' }}
+                                    >
                                         <div className="member-avatar">
                                             {/* Condition to display photo or initials */}
                                             {member.profileImage ? (
@@ -227,6 +296,104 @@ function MyTeam() {
                     </div>
                 </div>
             </div>
+
+            {/* Manage Member Modal */}
+            {showManageModal && (
+                <div className="modal-overlay" onClick={closeManageMember}>
+                    <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h3>Manage Team Member</h3>
+                            <button
+                                className="btn-close"
+                                onClick={closeManageMember}
+                            >
+                                <i className="fas fa-times"></i>
+                            </button>
+                        </div>
+
+                        <div className="modal-body">
+                            {selectedMember ? (
+                                <div className="manage-member-content">
+                                    <div className="member-profile">
+                                        <div className="member-avatar large">
+                                            {selectedMember.profileImage ? (
+                                                <img
+                                                    src={selectedMember.profileImage}
+                                                    alt={`${selectedMember.nama}'s avatar`}
+                                                    onError={(e) => {
+                                                        e.target.style.display = 'none';
+                                                        e.target.parentNode.innerHTML = `<div class="member-avatar-placeholder large">${getInitial(selectedMember.nama)}</div>`;
+                                                    }}
+                                                />
+                                            ) : (
+                                                <div className="member-avatar-placeholder large">
+                                                    {getInitial(selectedMember.nama)}
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="member-details">
+                                            <h4>{selectedMember.nama || 'Unknown User'}</h4>
+                                            <p>{selectedMember.email}</p>
+                                            <p className="current-role">Current role: {selectedMember.role || 'Team Member'}</p>
+                                        </div>
+                                    </div>
+
+                                    {isAdmin(user) && (
+                                        <div className="manage-actions">
+                                            <div className="form-group">
+                                                <label>Change Role</label>
+                                                <select
+                                                    value={newRole}
+                                                    onChange={(e) => setNewRole(e.target.value)}
+                                                >
+                                                    <option value="Team Leader">Team Leader</option>
+                                                    <option value="Team Member">Team Member</option>
+                                                    <option value="Developer">Developer</option>
+                                                    <option value="Designer">Designer</option>
+                                                    <option value="Product Manager">Product Manager</option>
+                                                    <option value="QA Engineer">QA Engineer</option>
+                                                    <option value="Admin">Admin</option>
+                                                </select>
+                                                <div className="action-buttons">
+                                                    <button
+                                                        className="btn-save"
+                                                        onClick={handleRoleChange}
+                                                    >
+                                                        Update Role
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            <div className="danger-zone">
+                                                <h4>Danger Zone</h4>
+                                                <p>This action cannot be undone.</p>
+                                                <button
+                                                    className="btn-delete-member"
+                                                    onClick={handleDeleteMember}
+                                                >
+                                                    <i className="fas fa-trash-alt"></i> Delete Member
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            ) : (
+                                <div className="select-member-message">
+                                    <i className="fas fa-users"></i>
+                                    <p>Please select a team member to manage by clicking on their profile card.</p>
+                                    <p>You can change roles or remove team members from the system.</p>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="modal-actions">
+                            <button className="btn-close-modal" onClick={closeManageMember}>
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

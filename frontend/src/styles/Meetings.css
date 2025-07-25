@@ -1390,3 +1390,28 @@
 .search-bar i {
     cursor: pointer;
 }
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.btn-clear {
+    background: none;
+    border: none;
+    color: #6c5ce7;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+    padding: 5px 10px;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+.btn-clear:hover {
+    background-color: rgba(108, 92, 231, 0.1);
+}

@@ -311,9 +311,32 @@
 
 .dashboard-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  /* Two equal columns */
-  gap: 30px;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.team-overview {
+  grid-column: 1;
+}
+
+.mini-calendar {
+  grid-column: 2;
+}
+
+.upcoming-meetings {
+  grid-column: 1;
+  grid-row: 2;
+}
+
+.recent-activity {
+  grid-column: 2;
+  grid-row: 2;
+}
+
+.selected-date-meetings {
+  grid-column: 1 / -1;
+  grid-row: 3;
 }
 
 .dashboard-card {
@@ -448,4 +471,71 @@
   border-radius: 8px;
   flex: 1;
   margin: 0 5px;
+}
+
+/* Mini Calendar Styles */
+.calendar-mini {
+  margin-top: 15px;
+}
+
+.weekdays-mini {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  text-align: center;
+  font-weight: 500;
+  color: #666;
+  font-size: 12px;
+  margin-bottom: 5px;
+}
+
+.days-mini {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 5px;
+}
+
+.day-mini {
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 12px;
+  transition: background-color 0.2s;
+}
+
+.day-mini:hover {
+  background-color: #f0f0f0;
+}
+
+.day-mini.empty {
+  cursor: default;
+}
+
+.day-mini.today-mini {
+  background-color: #6c5ce7;
+  color: white;
+}
+
+.day-mini.selected-mini {
+  background-color: #ff9f43;
+  color: white;
+}
+
+.btn-clear-selection {
+  background: none;
+  border: none;
+  color: #6c5ce7;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.btn-clear-selection:hover {
+  text-decoration: underline;
+}
+
+.selected-date-meetings {
+  grid-column: 1 / -1;
+  grid-row: 3;
 }

@@ -1,6 +1,6 @@
 import { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AuthContext } from '../context/AuthContext';
+import { AuthContext, isAdmin } from '../context/AuthContext';
 import Sidebar from './Sidebar';
 import { updateUser, uploadProfileImage } from '../services/userService';
 import '../styles/Settings.css';
@@ -294,13 +294,20 @@ function Settings() {
                                         id="role"
                                         value={role}
                                         onChange={(e) => setRole(e.target.value)}
+                                        disabled={!isAdmin(user)} // Disable for non-admin users
                                     >
-                                        <option value="Team Member">Team Member</option>
+                                        {isAdmin(user) && <option value="Admin">Admin</option>}
                                         <option value="Team Leader">Team Leader</option>
+                                        <option value="Team Member">Team Member</option>
                                         <option value="Developer">Developer</option>
                                         <option value="Designer">Designer</option>
                                         <option value="Product Manager">Product Manager</option>
                                     </select>
+                                    {!isAdmin(user) && (
+                                        <div className="form-field-hint">
+                                            <i className="fas fa-info-circle"></i> Only administrators can change roles.
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 

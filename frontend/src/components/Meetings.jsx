@@ -14,11 +14,10 @@ function Meetings() {
     const [showNewMeetingModal, setShowNewMeetingModal] = useState(false);
     const [meetings, setMeetings] = useState([]);
     const [teamMembers, setTeamMembers] = useState([]);
-    const [showMeetingDetailModal, setShowMeetingDetailModal] = useState(false);
-    const [selectedMeeting, setSelectedMeeting] = useState(null);
+    const [isDateSelected, setIsDateSelected] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
-    const [searchResults, setSearchResults] = useState([]);
     const [showSearchResults, setShowSearchResults] = useState(false);
+    const [searchResults, setSearchResults] = useState([]);
     const navigate = useNavigate();
 
     // New meeting form state
@@ -218,22 +217,22 @@ function Meetings() {
 
     // Get today's meetings
     const getTodaysMeetings = () => {
-        const selectedDateStr = selectedDate.toDateString();
+        const today = new Date().toDateString();
         return getFilteredMeetings().filter(meeting => {
             const meetingDate = new Date(`${meeting.date}T${meeting.time}`);
-            return meetingDate.toDateString() === selectedDateStr;
+            return meetingDate.toDateString() === today;
         });
     };
 
     // Get tomorrow's meetings
     const getTomorrowsMeetings = () => {
-        const nextDay = new Date(selectedDate);
-        nextDay.setDate(nextDay.getDate() + 1);
-        const nextDayStr = nextDay.toDateString();
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        const tomorrowStr = tomorrow.toDateString();
 
         return getFilteredMeetings().filter(meeting => {
             const meetingDate = new Date(`${meeting.date}T${meeting.time}`);
-            return meetingDate.toDateString() === nextDayStr;
+            return meetingDate.toDateString() === tomorrowStr;
         });
     };
 
@@ -340,40 +339,52 @@ function Meetings() {
         );
     };
 
-    const openMeetingDetail = (meeting) => {
-        setSelectedMeeting(meeting);
-        setShowMeetingDetailModal(true);
+    // Update the meetings-view-tabs section to only show Upcoming tab
+    useEffect(() => {
+        setView('upcoming');
+    }, []);
+
+    // Handle date selection
+    const handleDateSelection = (date) => {
+        setSelectedDate(date);
+        setIsDateSelected(true);
+        // When selecting a new date, hide search results
+        setShowSearchResults(false);
+    };
+
+    // Clear date selection
+    const clearDateSelection = () => {
+        setIsDateSelected(false);
     };
 
     // Handle search
     const handleSearch = () => {
-        if (!searchTerm.trim()) {
-            setShowSearchResults(false);
-            return;
-        }
+        if (!searchTerm.trim()) return;
 
         const results = meetings.filter(meeting =>
             meeting.title.toLowerCase().includes(searchTerm.toLowerCase())
         );
-
         setSearchResults(results);
         setShowSearchResults(true);
+        // When searching, hide any selected date view
+        setIsDateSelected(false);
     };
 
-    // Handle input change
-    const handleSearchInputChange = (e) => {
-        setSearchTerm(e.target.value);
-        if (!e.target.value.trim()) {
-            setShowSearchResults(false);
-        }
+    // Modify the existing click handler for calendar days
+    // Replace the onClick event in the calendar days div:
+    // onClick={() => handleDateSelection(new Date(day.year, day.month, day.day))}
+
+    // Add this function to get meetings for selected date
+    const getSelectedDateMeetings = () => {
+        const selectedDateStr = selectedDate.toDateString();
+        return meetings.filter(meeting => {
+            const meetingDate = new Date(`${meeting.date}T${meeting.time}`);
+            return meetingDate.toDateString() === selectedDateStr;
+        });
     };
 
-    // Clear search
-    const clearSearch = () => {
-        setSearchTerm('');
-        setShowSearchResults(false);
-    };
-
+    // Update the search bar input and icon
+    // Replace the search-bar div with this:
     return (
         <div className="dashboard-main">
             <Sidebar />
@@ -388,14 +399,10 @@ function Meetings() {
                                 type="text"
                                 placeholder="Search meetings..."
                                 value={searchTerm}
-                                onChange={handleSearchInputChange}
+                                onChange={(e) => setSearchTerm(e.target.value)}
                                 onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
                             />
-                            {searchTerm ? (
-                                <i className="fas fa-times" onClick={clearSearch} style={{ cursor: 'pointer' }}></i>
-                            ) : (
-                                <i className="fas fa-search" onClick={handleSearch} style={{ cursor: 'pointer' }}></i>
-                            )}
+                            <i className="fas fa-search" onClick={handleSearch} style={{ cursor: 'pointer' }}></i>
                         </div>
                         <button
                             className="btn-new-meeting"
@@ -415,15 +422,105 @@ function Meetings() {
                     </button>
                 </div>
 
+                <div className="calendar-container">
+                    <div className="calendar-header">
+                        <button className="btn-prev-month" onClick={prevMonth}>
+                            <i className="fas fa-chevron-left"></i>
+                        </button>
+                        <h3>{month.toLocaleString('default', { month: 'long', year: 'numeric' })}</h3>
+                        <button className="btn-next-month" onClick={nextMonth}>
+                            <i className="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
+
+                    <div className="calendar-grid">
+                        <div className="weekdays">
+                            {weekdays.map(day => (
+                                <div key={day} className="weekday">{day}</div>
+                            ))}
+                        </div>
+                        <div className="days">
+                            {generateCalendarDays().map((day, index) => (
+                                <div
+                                    key={index}
+                                    className={`day ${!day.isCurrentMonth ? 'other-month' : ''} ${day.isToday ? 'today' : ''} ${day.isSelected ? 'selected' : ''}`}
+                                    onClick={() => handleDateSelection(new Date(day.year, day.month, day.day))}
+                                >
+                                    {day.day}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Selected Date Meetings */}
+                {isDateSelected && (
+                    <div className="meetings-section">
+                        <div className="section-header">
+                            <h3>Meetings on {selectedDate.toLocaleDateString()}</h3>
+                            <button className="btn-clear" onClick={clearDateSelection}>
+                                <i className="fas fa-times"></i> Clear
+                            </button>
+                        </div>
+                        <div className="meeting-list">
+                            {getSelectedDateMeetings().length > 0 ? (
+                                getSelectedDateMeetings().map(meeting => (
+                                    <div key={meeting.id} className="meeting-item">
+                                        <div className="meeting-time">
+                                            <div className="time">{meeting.time}</div>
+                                            <div className="duration">{meeting.duration} min</div>
+                                            <div className="countdown">
+                                                {getCountdown(meeting.date, meeting.time)}
+                                            </div>
+                                        </div>
+                                        <div className="meeting-details">
+                                            <h4>{meeting.title}</h4>
+                                            <p>{meeting.description}</p>
+                                            <div className="meeting-participants">
+                                                {meeting.allMembers ? (
+                                                    <div className="all-members-badge">
+                                                        <i className="fas fa-users"></i>
+                                                        All members
+                                                    </div>
+                                                ) : (
+                                                    renderParticipants(meeting.participants)
+                                                )}
+                                            </div>
+                                        </div>
+                                        <div className="meeting-actions">
+                                            <button
+                                                className="btn-details"
+                                                onClick={() => navigate(`/meeting/${meeting.id}`)}
+                                            >
+                                                Details
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))
+                            ) : (
+                                <div className="no-meetings">
+                                    <p>No meetings scheduled for this date</p>
+                                    <button
+                                        className="btn-new-meeting"
+                                        onClick={() => setShowNewMeetingModal(true)}
+                                    >
+                                        <i className="fas fa-plus"></i> Schedule Meeting
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
+
+                {/* Search Results */}
                 {showSearchResults && (
-                    <div className="search-results">
-                        <div className="search-results-header">
-                            <h3>Search Results for "{searchTerm}"</h3>
-                            <button className="btn-clear-search" onClick={clearSearch}>
+                    <div className="meetings-section">
+                        <div className="section-header">
+                            <h3>Search Results: "{searchTerm}"</h3>
+                            <button className="btn-clear" onClick={() => setShowSearchResults(false)}>
                                 <i className="fas fa-times"></i> Clear Search
                             </button>
                         </div>
-
                         <div className="meeting-list">
                             {searchResults.length > 0 ? (
                                 searchResults.map(meeting => (
@@ -452,7 +549,7 @@ function Meetings() {
                                         <div className="meeting-actions">
                                             <button
                                                 className="btn-details"
-                                                onClick={() => openMeetingDetail(meeting)}
+                                                onClick={() => navigate(`/meeting/${meeting.id}`)}
                                             >
                                                 Details
                                             </button>
@@ -462,49 +559,20 @@ function Meetings() {
                             ) : (
                                 <div className="no-meetings">
                                     <p>No meetings found matching "{searchTerm}"</p>
+                                    <button
+                                        className="btn-new-meeting"
+                                        onClick={() => setShowNewMeetingModal(true)}
+                                    >
+                                        <i className="fas fa-plus"></i> Schedule Meeting
+                                    </button>
                                 </div>
                             )}
                         </div>
                     </div>
                 )}
 
-                <div className="calendar-container">
-                    <div className="calendar-header">
-                        <button className="btn-prev-month" onClick={prevMonth}>
-                            <i className="fas fa-chevron-left"></i>
-                        </button>
-                        <h3>{month.toLocaleString('default', { month: 'long', year: 'numeric' })}</h3>
-                        <button className="btn-next-month" onClick={nextMonth}>
-                            <i className="fas fa-chevron-right"></i>
-                        </button>
-                    </div>
-
-                    <div className="calendar-grid">
-                        <div className="weekdays">
-                            {weekdays.map(day => (
-                                <div key={day} className="weekday">{day}</div>
-                            ))}
-                        </div>
-                        <div className="days">
-                            {generateCalendarDays().map((day, index) => (
-                                <div
-                                    key={index}
-                                    className={`day ${!day.isCurrentMonth ? 'other-month' : ''} ${day.isToday ? 'today' : ''} ${day.isSelected ? 'selected' : ''}`}
-                                    onClick={() => setSelectedDate(new Date(day.year, day.month, day.day))}
-                                >
-                                    {day.day}
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-
                 <div className="meetings-section">
-                    <h3>
-                        {selectedDate.toDateString() === new Date().toDateString()
-                            ? "Today's Meetings"
-                            : `Meetings for ${selectedDate.toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}`}
-                    </h3>
+                    <h3>Today's Meetings</h3>
                     <div className="meeting-list">
                         {todaysMeetings.length > 0 ? (
                             todaysMeetings.map(meeting => (
@@ -533,7 +601,7 @@ function Meetings() {
                                     <div className="meeting-actions">
                                         <button
                                             className="btn-details"
-                                            onClick={() => openMeetingDetail(meeting)}
+                                            onClick={() => navigate(`/meeting/${meeting.id}`)}
                                         >
                                             Details
                                         </button>
@@ -555,18 +623,7 @@ function Meetings() {
                 </div>
 
                 <div className="meetings-section">
-                    <h3>
-                        {(() => {
-                            const nextDay = new Date(selectedDate);
-                            nextDay.setDate(nextDay.getDate() + 1);
-                            const tomorrow = new Date();
-                            tomorrow.setDate(tomorrow.getDate() + 1);
-
-                            return nextDay.toDateString() === tomorrow.toDateString()
-                                ? "Tomorrow's Meetings"
-                                : `Meetings for ${nextDay.toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}`;
-                        })()}
-                    </h3>
+                    <h3>Tomorrow's Meetings</h3>
                     <div className="meeting-list">
                         {tomorrowsMeetings.length > 0 ? (
                             tomorrowsMeetings.map(meeting => (
@@ -595,7 +652,7 @@ function Meetings() {
                                     <div className="meeting-actions">
                                         <button
                                             className="btn-details"
-                                            onClick={() => openMeetingDetail(meeting)}
+                                            onClick={() => navigate(`/meeting/${meeting.id}`)}
                                         >
                                             Details
                                         </button>
@@ -775,119 +832,6 @@ function Meetings() {
                                     </button>
                                 </div>
                             </form>
-                        </div>
-                    </div>
-                )}
-
-                {/* Meeting Detail Modal */}
-                {showMeetingDetailModal && selectedMeeting && (
-                    <div className="modal-overlay" onClick={() => setShowMeetingDetailModal(false)}>
-                        <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-                            <div className="modal-header">
-                                <h3>Meeting Details</h3>
-                                <button
-                                    className="btn-close"
-                                    onClick={() => setShowMeetingDetailModal(false)}
-                                >
-                                    <i className="fas fa-times"></i>
-                                </button>
-                            </div>
-
-                            <div className="meeting-detail-content">
-                                <div className="detail-group">
-                                    <label>Meeting Title</label>
-                                    <div className="detail-value">{selectedMeeting.title}</div>
-                                </div>
-
-                                <div className="detail-group">
-                                    <label>Description</label>
-                                    <div className="detail-value description">
-                                        {selectedMeeting.description || 'No description provided'}
-                                    </div>
-                                </div>
-
-                                <div className="detail-row">
-                                    <div className="detail-group">
-                                        <label>Date</label>
-                                        <div className="detail-value">
-                                            {new Date(selectedMeeting.date).toLocaleDateString(undefined, {
-                                                weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
-                                            })}
-                                        </div>
-                                    </div>
-
-                                    <div className="detail-group">
-                                        <label>Time</label>
-                                        <div className="detail-value">{selectedMeeting.time}</div>
-                                    </div>
-
-                                    <div className="detail-group">
-                                        <label>Duration</label>
-                                        <div className="detail-value">{selectedMeeting.duration} minutes</div>
-                                    </div>
-                                </div>
-
-                                <div className="detail-group">
-                                    <label>Participants</label>
-                                    <div className="detail-value">
-                                        {selectedMeeting.allMembers ? (
-                                            <div className="all-members-badge">
-                                                <i className="fas fa-users"></i> All team members
-                                            </div>
-                                        ) : (
-                                            <div className="participants-list-detail">
-                                                {selectedMeeting.participants && selectedMeeting.participants.length > 0 ? (
-                                                    selectedMeeting.participants.map((participant, index) => (
-                                                        <div key={participant?.id || index} className="participant-item-detail">
-                                                            <div className="participant-avatar">
-                                                                {participant?.profileImage ? (
-                                                                    <img
-                                                                        src={participant.profileImage}
-                                                                        alt={participant.nama || 'Participant'}
-                                                                        onError={(e) => {
-                                                                            e.target.onerror = null;
-                                                                            e.target.parentNode.innerHTML = `<div class="text-avatar">${(participant?.nama?.charAt(0) || '?').toUpperCase()}</div>`;
-                                                                        }}
-                                                                    />
-                                                                ) : (
-                                                                    <div className="text-avatar">
-                                                                        {(participant?.nama?.charAt(0) || '?').toUpperCase()}
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                            <div className="participant-info">
-                                                                <span className="participant-name">{participant?.nama || 'Unknown'}</span>
-                                                                <span className="participant-role">{participant?.role || 'Member'}</span>
-                                                            </div>
-                                                        </div>
-                                                    ))
-                                                ) : (
-                                                    <div className="no-participants">No participants</div>
-                                                )}
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-
-                                <div className="detail-group">
-                                    <label>Created By</label>
-                                    <div className="detail-value creator-info">
-                                        {selectedMeeting.createdBy?.nama || 'Unknown user'}
-                                    </div>
-                                </div>
-
-                                <div className="modal-actions">
-                                    <button className="btn-join-meeting">
-                                        <i className="fas fa-video"></i> Join Meeting
-                                    </button>
-                                    <button
-                                        className="btn-close-modal"
-                                        onClick={() => setShowMeetingDetailModal(false)}
-                                    >
-                                        Close
-                                    </button>
-                                </div>
-                            </div>
                         </div>
                     </div>
                 )}

@@ -30,7 +30,7 @@ export const getUsers = async () => {
 
         // Ensure we have valid data
         const data = response.data || [];
-        
+
         // Add baseURL to profileImage if exists
         const users = Array.isArray(data) ? data.map(user => {
             if (user && user.profileImage && !user.profileImage.startsWith('http')) {
@@ -132,6 +132,24 @@ export const uploadProfileImage = async (formData) => {
         console.error('Error uploading profile image:', error);
         console.error('Status:', error.response?.status);
         console.error('Data:', error.response?.data);
+        throw error;
+    }
+};
+
+// Delete user
+export const deleteUser = async (userId) => {
+    try {
+        const token = localStorage.getItem('token');
+
+        const response = await api.delete(`/api/users/${userId}`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        return response.data;
+    } catch (error) {
+        console.error('Error deleting user:', error);
         throw error;
     }
 };
