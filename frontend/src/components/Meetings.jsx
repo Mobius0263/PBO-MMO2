@@ -16,6 +16,9 @@ function Meetings() {
     const [teamMembers, setTeamMembers] = useState([]);
     const [showMeetingDetailModal, setShowMeetingDetailModal] = useState(false);
     const [selectedMeeting, setSelectedMeeting] = useState(null);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [searchResults, setSearchResults] = useState([]);
+    const [showSearchResults, setShowSearchResults] = useState(false);
     const navigate = useNavigate();
 
     // New meeting form state
@@ -342,6 +345,35 @@ function Meetings() {
         setShowMeetingDetailModal(true);
     };
 
+    // Handle search
+    const handleSearch = () => {
+        if (!searchTerm.trim()) {
+            setShowSearchResults(false);
+            return;
+        }
+
+        const results = meetings.filter(meeting =>
+            meeting.title.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+
+        setSearchResults(results);
+        setShowSearchResults(true);
+    };
+
+    // Handle input change
+    const handleSearchInputChange = (e) => {
+        setSearchTerm(e.target.value);
+        if (!e.target.value.trim()) {
+            setShowSearchResults(false);
+        }
+    };
+
+    // Clear search
+    const clearSearch = () => {
+        setSearchTerm('');
+        setShowSearchResults(false);
+    };
+
     return (
         <div className="dashboard-main">
             <Sidebar />
@@ -352,8 +384,18 @@ function Meetings() {
 
                     <div className="meetings-actions">
                         <div className="search-bar">
-                            <input type="text" placeholder="Search meetings..." />
-                            <i className="fas fa-search"></i>
+                            <input
+                                type="text"
+                                placeholder="Search meetings..."
+                                value={searchTerm}
+                                onChange={handleSearchInputChange}
+                                onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                            />
+                            {searchTerm ? (
+                                <i className="fas fa-times" onClick={clearSearch} style={{ cursor: 'pointer' }}></i>
+                            ) : (
+                                <i className="fas fa-search" onClick={handleSearch} style={{ cursor: 'pointer' }}></i>
+                            )}
                         </div>
                         <button
                             className="btn-new-meeting"
@@ -372,6 +414,59 @@ function Meetings() {
                         Upcoming
                     </button>
                 </div>
+
+                {showSearchResults && (
+                    <div className="search-results">
+                        <div className="search-results-header">
+                            <h3>Search Results for "{searchTerm}"</h3>
+                            <button className="btn-clear-search" onClick={clearSearch}>
+                                <i className="fas fa-times"></i> Clear Search
+                            </button>
+                        </div>
+
+                        <div className="meeting-list">
+                            {searchResults.length > 0 ? (
+                                searchResults.map(meeting => (
+                                    <div key={meeting.id} className="meeting-item">
+                                        <div className="meeting-time">
+                                            <div className="time">{meeting.time}</div>
+                                            <div className="duration">{meeting.duration} min</div>
+                                            <div className="countdown">
+                                                {getCountdown(meeting.date, meeting.time)}
+                                            </div>
+                                        </div>
+                                        <div className="meeting-details">
+                                            <h4>{meeting.title}</h4>
+                                            <p>{meeting.description}</p>
+                                            <div className="meeting-participants">
+                                                {meeting.allMembers ? (
+                                                    <div className="all-members-badge">
+                                                        <i className="fas fa-users"></i>
+                                                        All members
+                                                    </div>
+                                                ) : (
+                                                    renderParticipants(meeting.participants)
+                                                )}
+                                            </div>
+                                        </div>
+                                        <div className="meeting-actions">
+                                            <button
+                                                className="btn-details"
+                                                onClick={() => openMeetingDetail(meeting)}
+                                            >
+                                                Details
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))
+                            ) : (
+                                <div className="no-meetings">
+                                    <p>No meetings found matching "{searchTerm}"</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
 
                 <div className="calendar-container">
                     <div className="calendar-header">

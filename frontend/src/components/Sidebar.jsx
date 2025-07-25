@@ -31,7 +31,7 @@ function Sidebar() {
     return (
         <div className="dashboard-sidebar">
             <div className="logo">
-                <h2>CoEmotion</h2>
+                <h2>Meet-Up</h2>
             </div>
             <ul className="sidebar-nav">
                 <li className={isActive('/dashboard') ? 'active' : ''}>
