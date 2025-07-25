@@ -14,10 +14,10 @@ class ErrorBoundary extends React.Component {
     componentDidCatch(error, errorInfo) {
         // Log the error to console for debugging
         console.error('ErrorBoundary caught an error:', error, errorInfo);
-        
+
         this.setState({
             error: error,
-            errorInfo: errorInfo
+            errorInfo: errorInfo || {} // Pastikan errorInfo tidak null
         });
     }
 
@@ -41,7 +41,7 @@ class ErrorBoundary extends React.Component {
                     <p style={{ marginBottom: '20px', color: '#666' }}>
                         The application has encountered an error. Please try refreshing the page.
                     </p>
-                    <details style={{ 
+                    <details style={{
                         whiteSpace: 'pre-wrap',
                         backgroundColor: '#fff',
                         padding: '10px',
@@ -56,9 +56,13 @@ class ErrorBoundary extends React.Component {
                         </summary>
                         {this.state.error && this.state.error.toString()}
                         <br />
-                        {this.state.errorInfo.componentStack}
+                        {this.state.errorInfo && this.state.errorInfo.componentStack ? (
+                            this.state.errorInfo.componentStack
+                        ) : (
+                            "No component stack available"
+                        )}
                     </details>
-                    <button 
+                    <button
                         onClick={() => window.location.reload()}
                         style={{
                             padding: '10px 20px',

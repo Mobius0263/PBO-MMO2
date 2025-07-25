@@ -20,6 +20,11 @@ function Meetings() {
     const [searchResults, setSearchResults] = useState([]);
     const navigate = useNavigate();
 
+    // Fungsi untuk menentukan apakah user memiliki akses untuk membuat meeting
+    const hasPermissionToCreateMeeting = (user) => {
+        return user && (user.role === 'Admin' || user.role === 'Team Leader');
+    };
+
     // New meeting form state
     const [newMeetingData, setNewMeetingData] = useState({
         title: '',
@@ -404,12 +409,14 @@ function Meetings() {
                             />
                             <i className="fas fa-search" onClick={handleSearch} style={{ cursor: 'pointer' }}></i>
                         </div>
-                        <button
-                            className="btn-new-meeting"
-                            onClick={() => setShowNewMeetingModal(true)}
-                        >
-                            <i className="fas fa-plus"></i> New Meeting
-                        </button>
+                        {hasPermissionToCreateMeeting(user) && (
+                            <button
+                                className="btn-new-meeting"
+                                onClick={() => setShowNewMeetingModal(true)}
+                            >
+                                <i className="fas fa-plus"></i> New Meeting
+                            </button>
+                        )}
                     </div>
                 </div>
 
@@ -500,12 +507,14 @@ function Meetings() {
                             ) : (
                                 <div className="no-meetings">
                                     <p>No meetings scheduled for this date</p>
-                                    <button
-                                        className="btn-new-meeting"
-                                        onClick={() => setShowNewMeetingModal(true)}
-                                    >
-                                        <i className="fas fa-plus"></i> Schedule Meeting
-                                    </button>
+                                    {hasPermissionToCreateMeeting(user) && (
+                                        <button
+                                            className="btn-new-meeting"
+                                            onClick={() => setShowNewMeetingModal(true)}
+                                        >
+                                            <i className="fas fa-plus"></i> Schedule Meeting
+                                        </button>
+                                    )}
                                 </div>
                             )}
                         </div>
@@ -559,12 +568,14 @@ function Meetings() {
                             ) : (
                                 <div className="no-meetings">
                                     <p>No meetings found matching "{searchTerm}"</p>
-                                    <button
-                                        className="btn-new-meeting"
-                                        onClick={() => setShowNewMeetingModal(true)}
-                                    >
-                                        <i className="fas fa-plus"></i> Schedule Meeting
-                                    </button>
+                                    {hasPermissionToCreateMeeting(user) && (
+                                        <button
+                                            className="btn-new-meeting"
+                                            onClick={() => setShowNewMeetingModal(true)}
+                                        >
+                                            <i className="fas fa-plus"></i> Schedule Meeting
+                                        </button>
+                                    )}
                                 </div>
                             )}
                         </div>
@@ -611,12 +622,14 @@ function Meetings() {
                         ) : (
                             <div className="no-meetings">
                                 <p>No meetings scheduled for today</p>
-                                <button
-                                    className="btn-new-meeting"
-                                    onClick={() => setShowNewMeetingModal(true)}
-                                >
-                                    <i className="fas fa-plus"></i> Schedule Meeting
-                                </button>
+                                {hasPermissionToCreateMeeting(user) && (
+                                    <button
+                                        className="btn-new-meeting"
+                                        onClick={() => setShowNewMeetingModal(true)}
+                                    >
+                                        <i className="fas fa-plus"></i> Schedule Meeting
+                                    </button>
+                                )}
                             </div>
                         )}
                     </div>
@@ -662,12 +675,14 @@ function Meetings() {
                         ) : (
                             <div className="no-meetings">
                                 <p>No meetings scheduled for tomorrow</p>
-                                <button
-                                    className="btn-new-meeting"
-                                    onClick={() => setShowNewMeetingModal(true)}
-                                >
-                                    <i className="fas fa-plus"></i> Schedule Meeting
-                                </button>
+                                {hasPermissionToCreateMeeting(user) && (
+                                    <button
+                                        className="btn-new-meeting"
+                                        onClick={() => setShowNewMeetingModal(true)}
+                                    >
+                                        <i className="fas fa-plus"></i> Schedule Meeting
+                                    </button>
+                                )}
                             </div>
                         )}
                     </div>
