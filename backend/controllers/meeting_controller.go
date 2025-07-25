@@ -15,17 +15,17 @@ import (
 )
 
 // CreateMeeting godoc
-// @Summary Create a new meeting
-// @Description Create a new meeting with the provided details
-// @Tags Meetings
-// @Accept json
-// @Produce json
-// @Security Bearer
-// @Param meeting body models.Meeting true "Meeting data"
-// @Success 201 {object} models.Meeting "Meeting created successfully"
-// @Failure 400 {object} map[string]string "Invalid request"
-// @Failure 500 {object} map[string]string "Internal server error"
-// @Router /api/meetings [post]
+//	@Summary		Create a new meeting
+//	@Description	Create a new meeting with the provided details
+//	@Tags			Meetings
+//	@Accept			json
+//	@Produce		json
+//	@Security		Bearer
+//	@Param			meeting	body		models.Meeting		true	"Meeting data"
+//	@Success		201		{object}	models.Meeting		"Meeting created successfully"
+//	@Failure		400		{object}	map[string]string	"Invalid request"
+//	@Failure		500		{object}	map[string]string	"Internal server error"
+//	@Router			/api/meetings [post]
 // CreateMeeting creates a new meeting
 func CreateMeeting(c *fiber.Ctx) error {
 	// Parse request body
@@ -71,14 +71,14 @@ func CreateMeeting(c *fiber.Ctx) error {
 }
 
 // GetMeetings godoc
-// @Summary Get all meetings
-// @Description Get list of all meetings
-// @Tags Meetings
-// @Produce json
-// @Security Bearer
-// @Success 200 {array} models.Meeting "List of meetings"
-// @Failure 500 {object} map[string]string "Internal server error"
-// @Router /api/meetings [get]
+//	@Summary		Get all meetings
+//	@Description	Get list of all meetings
+//	@Tags			Meetings
+//	@Produce		json
+//	@Security		Bearer
+//	@Success		200	{array}		models.Meeting		"List of meetings"
+//	@Failure		500	{object}	map[string]string	"Internal server error"
+//	@Router			/api/meetings [get]
 // GetMeetings returns all meetings
 func GetMeetings(c *fiber.Ctx) error {
 	// Set context with timeout
@@ -117,14 +117,14 @@ func GetMeetings(c *fiber.Ctx) error {
 }
 
 // GetUpcomingMeetings godoc
-// @Summary Get upcoming meetings
-// @Description Get list of meetings that are scheduled for today and haven't started yet, or are in the future
-// @Tags Meetings
-// @Produce json
-// @Security Bearer
-// @Success 200 {array} models.Meeting "List of upcoming meetings"
-// @Failure 500 {object} map[string]string "Internal server error"
-// @Router /api/meetings/upcoming [get]
+//	@Summary		Get upcoming meetings
+//	@Description	Get list of meetings that are scheduled for today and haven't started yet, or are in the future
+//	@Tags			Meetings
+//	@Produce		json
+//	@Security		Bearer
+//	@Success		200	{array}		models.Meeting		"List of upcoming meetings"
+//	@Failure		500	{object}	map[string]string	"Internal server error"
+//	@Router			/api/meetings/upcoming [get]
 func GetUpcomingMeetings(c *fiber.Ctx) error {
 	now := time.Now()
 	today := now.Format("2006-01-02")
@@ -186,14 +186,14 @@ func GetUpcomingMeetings(c *fiber.Ctx) error {
 }
 
 // GetTodayMeetings godoc
-// @Summary Get today's meetings
-// @Description Get list of meetings scheduled for today
-// @Tags Meetings
-// @Produce json
-// @Security Bearer
-// @Success 200 {array} models.Meeting "List of today's meetings"
-// @Failure 500 {object} map[string]string "Internal server error"
-// @Router /api/meetings/today [get]
+//	@Summary		Get today's meetings
+//	@Description	Get list of meetings scheduled for today
+//	@Tags			Meetings
+//	@Produce		json
+//	@Security		Bearer
+//	@Success		200	{array}		models.Meeting		"List of today's meetings"
+//	@Failure		500	{object}	map[string]string	"Internal server error"
+//	@Router			/api/meetings/today [get]
 // GetTodayMeetings returns meetings for today
 func GetTodayMeetings(c *fiber.Ctx) error {
 	// Get current date
@@ -319,4 +319,153 @@ func GetFilenameFromPath(path string) string {
 		return path[9:]
 	}
 	return path
+}
+
+// GetMeetingById godoc
+//	@Summary		Get meeting by ID
+//	@Description	Get meeting information by meeting ID
+//	@Tags			Meetings
+//	@Produce		json
+//	@Security		Bearer
+//	@Param			id	path		string					true	"Meeting ID"
+//	@Success		200	{object}	models.MeetingResponse	"Meeting information"
+//	@Failure		404	{object}	map[string]string		"Meeting not found"
+//	@Failure		500	{object}	map[string]string		"Internal server error"
+//	@Router			/api/meetings/{id} [get]
+func GetMeetingById(c *fiber.Ctx) error {
+	meetingID := c.Params("id")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	var meeting models.Meeting
+	var err error
+
+	// Try with ObjectID first
+	objectID, err := primitive.ObjectIDFromHex(meetingID)
+	if err == nil {
+		err = config.MeetingCollectionRef.FindOne(ctx, bson.M{"_id": objectID}).Decode(&meeting)
+	}
+
+	// Fall back to string ID if ObjectID fails
+	if err != nil {
+		err = config.MeetingCollectionRef.FindOne(ctx, bson.M{"_id": meetingID}).Decode(&meeting)
+	}
+
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return c.Status(404).JSON(fiber.Map{"error": "Meeting not found"})
+		}
+		return c.Status(500).JSON(fiber.Map{"error": "Failed to fetch meeting"})
+	}
+
+	// Populate meeting response with user details
+	response := populateMeetingResponse(meeting)
+
+	return c.JSON(response)
+}
+
+// UpdateMeeting godoc
+//	@Summary		Update meeting
+//	@Description	Update meeting information by meeting ID
+//	@Tags			Meetings
+//	@Accept			json
+//	@Produce		json
+//	@Security		Bearer
+//	@Param			id		path		string				true	"Meeting ID"
+//	@Param			meeting	body		models.Meeting		true	"Meeting update data"
+//	@Success		200		{object}	models.Meeting		"Meeting updated successfully"
+//	@Failure		400		{object}	map[string]string	"Invalid request"
+//	@Failure		404		{object}	map[string]string	"Meeting not found"
+//	@Failure		500		{object}	map[string]string	"Internal server error"
+//	@Router			/api/meetings/{id} [put]
+func UpdateMeeting(c *fiber.Ctx) error {
+	meetingID := c.Params("id")
+
+	var updateData models.Meeting
+	if err := c.BodyParser(&updateData); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid request data"})
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	// Create update document
+	update := bson.M{
+		"$set": bson.M{
+			"title":        updateData.Title,
+			"description":  updateData.Description,
+			"date":         updateData.Date,
+			"time":         updateData.Time,
+			"duration":     updateData.Duration,
+			"allMembers":   updateData.AllMembers,
+			"participants": updateData.Participants,
+		},
+	}
+
+	var updateResult *mongo.UpdateResult
+	var err error
+
+	// Try with ObjectID first
+	objectID, err := primitive.ObjectIDFromHex(meetingID)
+	if err == nil {
+		updateResult, err = config.MeetingCollectionRef.UpdateOne(ctx, bson.M{"_id": objectID}, update)
+		if err == nil && updateResult.MatchedCount > 0 {
+			return c.JSON(fiber.Map{"message": "Meeting updated successfully"})
+		}
+	}
+
+	// Fall back to string ID
+	updateResult, err = config.MeetingCollectionRef.UpdateOne(ctx, bson.M{"_id": meetingID}, update)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Failed to update meeting"})
+	}
+
+	if updateResult.MatchedCount == 0 {
+		return c.Status(404).JSON(fiber.Map{"error": "Meeting not found"})
+	}
+
+	return c.JSON(fiber.Map{"message": "Meeting updated successfully"})
+}
+
+// DeleteMeeting godoc
+//	@Summary		Delete meeting
+//	@Description	Delete a meeting by meeting ID
+//	@Tags			Meetings
+//	@Produce		json
+//	@Security		Bearer
+//	@Param			id	path		string				true	"Meeting ID"
+//	@Success		200	{object}	map[string]string	"Meeting deleted successfully"
+//	@Failure		404	{object}	map[string]string	"Meeting not found"
+//	@Failure		500	{object}	map[string]string	"Internal server error"
+//	@Router			/api/meetings/{id} [delete]
+func DeleteMeeting(c *fiber.Ctx) error {
+	meetingID := c.Params("id")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	var deleteResult *mongo.DeleteResult
+	var err error
+
+	// Try with ObjectID first
+	objectID, err := primitive.ObjectIDFromHex(meetingID)
+	if err == nil {
+		deleteResult, err = config.MeetingCollectionRef.DeleteOne(ctx, bson.M{"_id": objectID})
+		if err == nil && deleteResult.DeletedCount > 0 {
+			return c.JSON(fiber.Map{"message": "Meeting deleted successfully"})
+		}
+	}
+
+	// Fall back to string ID
+	deleteResult, err = config.MeetingCollectionRef.DeleteOne(ctx, bson.M{"_id": meetingID})
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Failed to delete meeting"})
+	}
+
+	if deleteResult.DeletedCount == 0 {
+		return c.Status(404).JSON(fiber.Map{"error": "Meeting not found"})
+	}
+
+	return c.JSON(fiber.Map{"message": "Meeting deleted successfully"})
 }

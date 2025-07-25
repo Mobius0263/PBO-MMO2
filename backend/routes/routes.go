@@ -1,6 +1,8 @@
 package routes
 
 import (
+	"time"
+
 	"backend/controllers"
 	"backend/middleware"
 
@@ -9,10 +11,8 @@ import (
 )
 
 func SetupRoutes(app *fiber.App) {
-	// TAMBAHKAN: Route untuk debugging di root
-	app.Get("/", func(c *fiber.Ctx) error {
-		return c.SendString("API Server is running")
-	})
+	// Root endpoint
+	app.Get("/", RootHandler)
 
 	// Swagger documentation route
 	app.Get("/swagger/*", fiberSwagger.WrapHandler)
@@ -30,6 +30,7 @@ func SetupRoutes(app *fiber.App) {
 	// TAMBAHKAN: Non-protected User endpoint
 	app.Get("/users", controllers.GetUsers)
 	app.Get("/users/:id", controllers.GetUserById)
+	app.Post("/users", controllers.CreateUser)
 
 	// Protected Api routes
 	api := app.Group("/api")
@@ -40,6 +41,7 @@ func SetupRoutes(app *fiber.App) {
 	api.Get("/team-members", controllers.GetTeamMembers)
 	api.Get("/users/:id", controllers.GetUserById)
 	api.Put("/users/:id", controllers.UpdateUser)
+	api.Delete("/users/:id", controllers.DeleteUser)
 
 	// Upload profile image
 	api.Post("/upload-profile-image", controllers.UploadProfileImage)
@@ -49,12 +51,43 @@ func SetupRoutes(app *fiber.App) {
 	api.Get("/meetings", controllers.GetMeetings)
 	api.Get("/meetings/today", controllers.GetTodayMeetings)
 	api.Get("/meetings/upcoming", controllers.GetUpcomingMeetings)
+	api.Get("/meetings/:id", controllers.GetMeetingById)
+	api.Put("/meetings/:id", controllers.UpdateMeeting)
+	api.Delete("/meetings/:id", controllers.DeleteMeeting)
 
 	// Health check
-	app.Get("/health", func(c *fiber.Ctx) error {
-		return c.Status(200).JSON(fiber.Map{
-			"status":  "ok",
-			"message": "Server is running",
-		})
+	app.Get("/health", HealthCheck)
+}
+
+// RootHandler godoc
+//
+//	@Summary		API Root
+//	@Description	API server status and information
+//	@Tags			General
+//	@Produce		json
+//	@Success		200	{object}	map[string]interface{}	"API server information"
+//	@Router			/ [get]
+func RootHandler(c *fiber.Ctx) error {
+	return c.JSON(fiber.Map{
+		"message": "CoEmotion API Server is running",
+		"version": "1.0",
+		"docs":    "/swagger/index.html",
+		"status":  "active",
+	})
+}
+
+// HealthCheck godoc
+//
+//	@Summary		Health check
+//	@Description	Check if the server is running and healthy
+//	@Tags			Health
+//	@Produce		json
+//	@Success		200	{object}	map[string]interface{}	"Server is healthy"
+//	@Router			/health [get]
+func HealthCheck(c *fiber.Ctx) error {
+	return c.Status(200).JSON(fiber.Map{
+		"status":  "ok",
+		"message": "Server is running",
+		"time":    time.Now().Format(time.RFC3339),
 	})
 }

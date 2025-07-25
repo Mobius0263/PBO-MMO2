@@ -25,6 +25,31 @@ definitions:
       title:
         type: string
     type: object
+  models.MeetingResponse:
+    properties:
+      allMembers:
+        type: boolean
+      createdAt:
+        type: string
+      createdBy:
+        $ref: '#/definitions/models.User'
+      date:
+        type: string
+      description:
+        type: string
+      duration:
+        type: integer
+      id:
+        type: string
+      participants:
+        items:
+          $ref: '#/definitions/models.User'
+        type: array
+      time:
+        type: string
+      title:
+        type: string
+    type: object
   models.User:
     properties:
       bio:
@@ -79,6 +104,20 @@ info:
   title: CoEmotion API
   version: "1.0"
 paths:
+  /:
+    get:
+      description: API server status and information
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: API server information
+          schema:
+            additionalProperties: true
+            type: object
+      summary: API Root
+      tags:
+      - General
   /api/meetings:
     get:
       description: Get list of all meetings
@@ -137,6 +176,119 @@ paths:
       summary: Create a new meeting
       tags:
       - Meetings
+  /api/meetings/{id}:
+    delete:
+      description: Delete a meeting by meeting ID
+      parameters:
+      - description: Meeting ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Meeting deleted successfully
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Meeting not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Delete meeting
+      tags:
+      - Meetings
+    get:
+      description: Get meeting information by meeting ID
+      parameters:
+      - description: Meeting ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Meeting information
+          schema:
+            $ref: '#/definitions/models.MeetingResponse'
+        "404":
+          description: Meeting not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Get meeting by ID
+      tags:
+      - Meetings
+    put:
+      consumes:
+      - application/json
+      description: Update meeting information by meeting ID
+      parameters:
+      - description: Meeting ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Meeting update data
+        in: body
+        name: meeting
+        required: true
+        schema:
+          $ref: '#/definitions/models.Meeting'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Meeting updated successfully
+          schema:
+            $ref: '#/definitions/models.Meeting'
+        "400":
+          description: Invalid request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Meeting not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Update meeting
+      tags:
+      - Meetings
   /api/meetings/today:
     get:
       description: Get list of meetings scheduled for today
@@ -158,6 +310,30 @@ paths:
       security:
       - Bearer: []
       summary: Get today's meetings
+      tags:
+      - Meetings
+  /api/meetings/upcoming:
+    get:
+      description: Get list of meetings that are scheduled for today and haven't started
+        yet, or are in the future
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of upcoming meetings
+          schema:
+            items:
+              $ref: '#/definitions/models.Meeting'
+            type: array
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Get upcoming meetings
       tags:
       - Meetings
   /api/team-members:
@@ -183,6 +359,153 @@ paths:
       summary: Get team members
       tags:
       - Users
+  /api/upload-profile-image:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Upload a profile image for the authenticated user
+      parameters:
+      - description: Image file
+        in: formData
+        name: image
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Image uploaded successfully
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Upload profile image
+      tags:
+      - Users
+  /api/users/{id}:
+    delete:
+      description: Delete a user account by user ID
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User deleted successfully
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: User not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Delete user
+      tags:
+      - Users
+    put:
+      consumes:
+      - application/json
+      description: Update user profile information including name, email, role, bio,
+        and password
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: User update data
+        in: body
+        name: user
+        required: true
+        schema:
+          properties:
+            bio:
+              type: string
+            currentPassword:
+              type: string
+            email:
+              type: string
+            nama:
+              type: string
+            newPassword:
+              type: string
+            profileImage:
+              type: string
+            role:
+              type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User updated successfully
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: User not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Update user information
+      tags:
+      - Users
+  /health:
+    get:
+      description: Check if the server is running and healthy
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Server is healthy
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Health check
+      tags:
+      - Health
   /login:
     post:
       consumes:
@@ -289,6 +612,65 @@ paths:
               type: string
             type: object
       summary: Get all users
+      tags:
+      - Users
+    post:
+      consumes:
+      - application/json
+      description: Create a new user account with username, email and password
+      parameters:
+      - description: User data
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/models.User'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User created successfully
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Create a new user
+      tags:
+      - Users
+  /users/{id}:
+    get:
+      description: Get user information by user ID
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User information
+          schema:
+            $ref: '#/definitions/models.UserResponse'
+        "404":
+          description: User not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get user by ID
       tags:
       - Users
 schemes:

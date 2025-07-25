@@ -15,26 +15,26 @@ import (
 	_ "backend/docs" // Import generated docs
 )
 
-// @title CoEmotion API
-// @version 1.0
-// @description This is the API documentation for CoEmotion meeting management system
-// @termsOfService http://swagger.io/terms/
+//	@title			CoEmotion API
+//	@version		1.0
+//	@description	This is the API documentation for CoEmotion meeting management system
+//	@termsOfService	http://swagger.io/terms/
 
-// @contact.name API Support
-// @contact.url http://www.swagger.io/support
-// @contact.email support@swagger.io
+//	@contact.name	API Support
+//	@contact.url	http://www.swagger.io/support
+//	@contact.email	support@swagger.io
 
-// @license.name MIT
-// @license.url https://opensource.org/licenses/MIT
+//	@license.name	MIT
+//	@license.url	https://opensource.org/licenses/MIT
 
-// @host localhost:8080
-// @BasePath /
-// @schemes http
+//	@host		localhost:8080
+//	@BasePath	/
+//	@schemes	http
 
-// @securityDefinitions.apikey Bearer
-// @in header
-// @name Authorization
-// @description Type "Bearer" followed by a space and JWT token.
+//	@securityDefinitions.apikey	Bearer
+//	@in							header
+//	@name						Authorization
+//	@description				Type "Bearer" followed by a space and JWT token.
 
 func main() {
 	err := godotenv.Load()

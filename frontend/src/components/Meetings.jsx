@@ -18,7 +18,21 @@ function Meetings() {
     const [searchTerm, setSearchTerm] = useState('');
     const [showSearchResults, setShowSearchResults] = useState(false);
     const [searchResults, setSearchResults] = useState([]);
+    const [showMeetingDetailModal, setShowMeetingDetailModal] = useState(false);
+    const [selectedMeeting, setSelectedMeeting] = useState(null);
     const navigate = useNavigate();
+
+    // Function to open meeting details modal
+    const openMeetingDetails = (meeting) => {
+        setSelectedMeeting(meeting);
+        setShowMeetingDetailModal(true);
+    };
+
+    // Function to close meeting details modal
+    const closeMeetingDetails = () => {
+        setShowMeetingDetailModal(false);
+        setSelectedMeeting(null);
+    };
 
     // Fungsi untuk menentukan apakah user memiliki akses untuk membuat meeting
     const hasPermissionToCreateMeeting = (user) => {
@@ -119,6 +133,27 @@ function Meetings() {
             return `${minutes} minutes`;
         } else {
             return '<1 minute';
+        }
+    };
+
+    // Format duration for display in modal
+    const formatDuration = (minutes) => {
+        const hours = Math.floor(minutes / 60);
+        const mins = minutes % 60;
+        if (hours > 0) {
+            return `${hours}h ${mins > 0 ? `${mins}m` : ''}`;
+        }
+        return `${mins}m`;
+    };
+
+    // Format time for display in modal
+    const formatTime = (timeString) => {
+        if (!timeString) return '';
+        try {
+            const [hours, minutes] = timeString.split(':').map(Number);
+            return new Date(0, 0, 0, hours, minutes).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        } catch (e) {
+            return timeString;
         }
     };
 
@@ -497,7 +532,7 @@ function Meetings() {
                                         <div className="meeting-actions">
                                             <button
                                                 className="btn-details"
-                                                onClick={() => navigate(`/meeting/${meeting.id}`)}
+                                                onClick={() => openMeetingDetails(meeting)}
                                             >
                                                 Details
                                             </button>
@@ -558,7 +593,7 @@ function Meetings() {
                                         <div className="meeting-actions">
                                             <button
                                                 className="btn-details"
-                                                onClick={() => navigate(`/meeting/${meeting.id}`)}
+                                                onClick={() => openMeetingDetails(meeting)}
                                             >
                                                 Details
                                             </button>
@@ -612,7 +647,7 @@ function Meetings() {
                                     <div className="meeting-actions">
                                         <button
                                             className="btn-details"
-                                            onClick={() => navigate(`/meeting/${meeting.id}`)}
+                                            onClick={() => openMeetingDetails(meeting)}
                                         >
                                             Details
                                         </button>
@@ -665,7 +700,7 @@ function Meetings() {
                                     <div className="meeting-actions">
                                         <button
                                             className="btn-details"
-                                            onClick={() => navigate(`/meeting/${meeting.id}`)}
+                                            onClick={() => openMeetingDetails(meeting)}
                                         >
                                             Details
                                         </button>
@@ -847,6 +882,98 @@ function Meetings() {
                                     </button>
                                 </div>
                             </form>
+                        </div>
+                    </div>
+                )}
+
+                {/* Meeting Details Modal */}
+                {showMeetingDetailModal && selectedMeeting && (
+                    <div className="modal-overlay" onClick={closeMeetingDetails}>
+                        <div className="modal-content meeting-detail-modal" onClick={(e) => e.stopPropagation()}>
+                            <div className="modal-header">
+                                <h3>Meeting Details</h3>
+                                <button
+                                    type="button"
+                                    className="btn-close"
+                                    onClick={closeMeetingDetails}
+                                >
+                                    <i className="fas fa-times"></i>
+                                </button>
+                            </div>
+                            <div className="modal-body">
+                                <div className="meeting-detail-info">
+                                    <div className="detail-row">
+                                        <span className="detail-label">Meeting Name:</span>
+                                        <span className="detail-value">{selectedMeeting.title || 'Untitled Meeting'}</span>
+                                    </div>
+                                    <div className="detail-row">
+                                        <span className="detail-label">Description:</span>
+                                        <span className="detail-value">{selectedMeeting.description || 'No description provided'}</span>
+                                    </div>
+                                    <div className="detail-row">
+                                        <span className="detail-label">Date:</span>
+                                        <span className="detail-value">
+                                            {new Date(selectedMeeting.date).toLocaleDateString(undefined, { 
+                                                weekday: 'long', 
+                                                year: 'numeric', 
+                                                month: 'long', 
+                                                day: 'numeric' 
+                                            })}
+                                        </span>
+                                    </div>
+                                    <div className="detail-row">
+                                        <span className="detail-label">Time:</span>
+                                        <span className="detail-value">{formatTime(selectedMeeting.time)}</span>
+                                    </div>
+                                    <div className="detail-row">
+                                        <span className="detail-label">Duration:</span>
+                                        <span className="detail-value">{formatDuration(selectedMeeting.duration)}</span>
+                                    </div>
+                                    <div className="detail-row">
+                                        <span className="detail-label">Members:</span>
+                                        <div className="detail-value members-list">
+                                            {selectedMeeting.allMembers ? (
+                                                <div className="all-members-indicator">
+                                                    <i className="fas fa-users"></i>
+                                                    <span>All Members</span>
+                                                </div>
+                                            ) : selectedMeeting.participants && selectedMeeting.participants.length > 0 ? (
+                                                <div className="participants-grid">
+                                                    {selectedMeeting.participants.map((participant, index) => (
+                                                        <div key={participant?.id || index} className="participant-card">
+                                                            <div className="participant-avatar">
+                                                                {participant?.profileImage ? (
+                                                                    <img
+                                                                        src={participant.profileImage}
+                                                                        alt={participant.nama || 'Participant'}
+                                                                        onError={(e) => {
+                                                                            e.target.onerror = null;
+                                                                            e.target.parentNode.innerHTML = `<div class="text-avatar">${(participant?.nama?.charAt(0) || '?').toUpperCase()}</div>`;
+                                                                        }}
+                                                                    />
+                                                                ) : (
+                                                                    <div className="text-avatar">
+                                                                        {(participant?.nama?.charAt(0) || '?').toUpperCase()}
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                            <div className="participant-info">
+                                                                <span className="participant-name">{participant?.nama || 'Unknown'}</span>
+                                                                <span className="participant-role">{participant?.role || 'Member'}</span>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                <div className="no-members-indicator">
+                                                    <i className="fas fa-user-slash"></i>
+                                                    <span>No Members</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 )}
