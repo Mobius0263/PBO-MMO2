@@ -19,6 +19,7 @@ import (
 )
 
 // GetTeamMembers godoc
+//
 //	@Summary		Get team members
 //	@Description	Get list of team members with additional information
 //	@Tags			Users
@@ -27,6 +28,7 @@ import (
 //	@Success		200	{array}		models.UserResponse	"List of team members"
 //	@Failure		500	{object}	map[string]string	"Internal server error"
 //	@Router			/api/team-members [get]
+//
 // Mendapatkan daftar pengguna dengan informasi tambahan
 func GetTeamMembers(c *fiber.Ctx) error {
 	var users []models.UserResponse
@@ -63,6 +65,7 @@ func GetTeamMembers(c *fiber.Ctx) error {
 }
 
 // GetUsers godoc
+//
 //	@Summary		Get all users
 //	@Description	Get list of all users in the system
 //	@Tags			Users
@@ -70,6 +73,7 @@ func GetTeamMembers(c *fiber.Ctx) error {
 //	@Success		200	{array}		models.User			"List of users"
 //	@Failure		500	{object}	map[string]string	"Internal server error"
 //	@Router			/users [get]
+//
 // Make sure this function is correctly implemented
 func GetUsers(c *fiber.Ctx) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -113,6 +117,7 @@ func GetUsers(c *fiber.Ctx) error {
 }
 
 // CreateUser godoc
+//
 //	@Summary		Create a new user
 //	@Description	Create a new user account with username, email and password
 //	@Tags			Users
@@ -150,6 +155,7 @@ func CreateUser(c *fiber.Ctx) error {
 // Tambahkan fungsi-fungsi berikut
 
 // GetUserById godoc
+//
 //	@Summary		Get user by ID
 //	@Description	Get user information by user ID
 //	@Tags			Users
@@ -158,6 +164,7 @@ func CreateUser(c *fiber.Ctx) error {
 //	@Success		200	{object}	models.UserResponse		"User information"
 //	@Failure		404	{object}	map[string]string		"User not found"
 //	@Router			/users/{id} [get]
+//
 // GetUserById returns user information by ID
 func GetUserById(c *fiber.Ctx) error {
 	userID := c.Params("id")
@@ -185,6 +192,7 @@ func GetUserById(c *fiber.Ctx) error {
 }
 
 // UploadProfileImage godoc
+//
 //	@Summary		Upload profile image
 //	@Description	Upload a profile image for the authenticated user
 //	@Tags			Users
@@ -296,6 +304,7 @@ func UploadProfileImage(c *fiber.Ctx) error {
 }
 
 // UpdateUser godoc
+//
 //	@Summary		Update user information
 //	@Description	Update user profile information including name, email, role, bio, and password
 //	@Tags			Users
@@ -308,6 +317,7 @@ func UploadProfileImage(c *fiber.Ctx) error {
 //	@Failure		404		{object}	map[string]string		"User not found"
 //	@Failure		500		{object}	map[string]string		"Internal server error"
 //	@Router			/api/users/{id} [put]
+//
 // UpdateUser function
 func UpdateUser(c *fiber.Ctx) error {
 	userID := c.Params("id")
@@ -429,6 +439,7 @@ func UpdateUser(c *fiber.Ctx) error {
 }
 
 // DeleteUser godoc
+//
 //	@Summary		Delete user
 //	@Description	Delete a user account by user ID
 //	@Tags			Users
@@ -436,26 +447,72 @@ func UpdateUser(c *fiber.Ctx) error {
 //	@Security		Bearer
 //	@Param			id	path		string				true	"User ID"
 //	@Success		200	{object}	map[string]string	"User deleted successfully"
+//	@Failure		400	{object}	map[string]string	"Bad request - Cannot delete self"
+//	@Failure		403	{object}	map[string]string	"Forbidden - Admin role required"
 //	@Failure		404	{object}	map[string]string	"User not found"
 //	@Failure		500	{object}	map[string]string	"Internal server error"
 //	@Router			/api/users/{id} [delete]
 func DeleteUser(c *fiber.Ctx) error {
-	userID := c.Params("id")
-	fmt.Println("Deleting user with ID:", userID)
+	// Get token user information
+	userClaims, ok := c.Locals("user").(jwt.MapClaims)
+	if !ok {
+		return c.Status(500).JSON(fiber.Map{"error": "Failed to parse user claims"})
+	}
 
+	// Get admin user's ID
+	adminID, ok := userClaims["id"].(string)
+	if !ok {
+		return c.Status(500).JSON(fiber.Map{"error": "Invalid user ID in token"})
+	}
+
+	// Get admin user's role from database to verify they're admin
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
+	var adminUser models.User
+
+	// Try getting admin user with ObjectID first
+	adminObjectID, err := primitive.ObjectIDFromHex(adminID)
+	if err == nil {
+		err = config.UserCollectionRef.FindOne(ctx, bson.M{"_id": adminObjectID}).Decode(&adminUser)
+		if err != nil {
+			// Try with string ID
+			err = config.UserCollectionRef.FindOne(ctx, bson.M{"_id": adminID}).Decode(&adminUser)
+		}
+	} else {
+		// Try with string ID
+		err = config.UserCollectionRef.FindOne(ctx, bson.M{"_id": adminID}).Decode(&adminUser)
+	}
+
+	if err != nil {
+		fmt.Println("Error finding admin user:", err)
+		return c.Status(500).JSON(fiber.Map{"error": "Failed to verify admin credentials"})
+	}
+
+	// Check if user is admin
+	if adminUser.Role != "Admin" {
+		fmt.Println("User tried to delete but doesn't have admin role:", adminUser.Role)
+		return c.Status(403).JSON(fiber.Map{"error": "Admin role required to delete users"})
+	}
+
+	// Get target user ID to delete
+	userID := c.Params("id")
+	fmt.Println("Attempting to delete user with ID:", userID)
+
+	// Prevent admin from deleting themselves
+	if userID == adminID {
+		return c.Status(400).JSON(fiber.Map{"error": "Cannot delete your own account"})
+	}
+
 	var deleteResult *mongo.DeleteResult
-	var err error
 
 	// Try with ObjectID first
 	objectID, err := primitive.ObjectIDFromHex(userID)
 	if err == nil {
 		deleteResult, err = config.UserCollectionRef.DeleteOne(ctx, bson.M{"_id": objectID})
 		if err == nil && deleteResult.DeletedCount > 0 {
-			fmt.Println("Deleted with ObjectID successfully")
-			return c.Status(200).JSON(fiber.Map{"message": "User deleted successfully"})
+			fmt.Println("Deleted user with ObjectID successfully")
+			return c.JSON(fiber.Map{"message": "User deleted successfully"})
 		}
 	}
 
@@ -467,9 +524,10 @@ func DeleteUser(c *fiber.Ctx) error {
 	}
 
 	if deleteResult.DeletedCount == 0 {
+		fmt.Println("No user found with ID:", userID)
 		return c.Status(404).JSON(fiber.Map{"error": "User not found"})
 	}
 
-	fmt.Println("Deleted with string ID successfully")
-	return c.Status(200).JSON(fiber.Map{"message": "User deleted successfully"})
+	fmt.Println("Deleted user with string ID successfully")
+	return c.JSON(fiber.Map{"message": "User deleted successfully"})
 }
