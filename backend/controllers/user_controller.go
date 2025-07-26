@@ -168,13 +168,37 @@ func CreateUser(c *fiber.Ctx) error {
 // GetUserById returns user information by ID
 func GetUserById(c *fiber.Ctx) error {
 	userID := c.Params("id")
+	fmt.Println("Looking up user with ID:", userID)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	var user models.User
-	err := config.UserCollectionRef.FindOne(ctx, bson.M{"_id": userID}).Decode(&user)
+	var err error
+
+	// Coba dengan ObjectID terlebih dahulu
+	objectID, objErr := primitive.ObjectIDFromHex(userID)
+	if objErr == nil {
+		err = config.UserCollectionRef.FindOne(ctx, bson.M{"_id": objectID}).Decode(&user)
+		if err == nil {
+			// User ditemukan dengan ObjectID
+			userResponse := models.UserResponse{
+				ID:           user.ID,
+				Nama:         user.Nama,
+				Email:        user.Email,
+				Role:         user.Role,
+				Bio:          user.Bio,
+				ProfileImage: user.ProfileImage,
+			}
+			fmt.Println("User found with ObjectID:", userID)
+			return c.JSON(userResponse)
+		}
+	}
+
+	// Jika tidak ditemukan dengan ObjectID, coba dengan string ID
+	err = config.UserCollectionRef.FindOne(ctx, bson.M{"_id": userID}).Decode(&user)
 	if err != nil {
+		fmt.Println("User not found with ID:", userID, "Error:", err)
 		return c.Status(404).JSON(fiber.Map{"error": "User not found"})
 	}
 
@@ -188,6 +212,7 @@ func GetUserById(c *fiber.Ctx) error {
 		ProfileImage: user.ProfileImage,
 	}
 
+	fmt.Println("User found with string ID:", userID)
 	return c.JSON(userResponse)
 }
 
